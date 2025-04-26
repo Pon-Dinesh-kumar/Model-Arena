@@ -23,7 +23,7 @@ const InfoModal: React.FC = () => {
         <DialogHeader>
           <DialogTitle className="text-xl">Model Arena: Tic-Tac-Toe</DialogTitle>
           <DialogDescription>
-            Pit two machine learning models against each other in a classic game of Tic-Tac-Toe
+            Pit two machine learning models against each other in a classic game of Tic-Tac-Toe kk is pro
           </DialogDescription>
         </DialogHeader>
         

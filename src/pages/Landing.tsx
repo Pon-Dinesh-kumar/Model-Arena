@@ -157,7 +157,7 @@ const Landing = () => {
           <div className="relative z-10 max-w-6xl mx-auto">
             <h1 className="text-7xl font-bold text-center mb-6 cyberpunk-text">
               <span className="bg-gradient-to-r from-[#FF3CBD] to-[#FF85E1] text-transparent bg-clip-text">
-                BATTLE WITH AI MODELS
+                BATTLE WITH AI MODELS kk is pro
               </span>
             </h1>
             <p className="text-center text-gray-400 text-xl mb-8 max-w-2xl mx-auto">

@@ -18,6 +18,7 @@ const Landing = () => {
   const [hoverCard, setHoverCard] = useState<number | null>(null);
   const [vantaEffect, setVantaEffect] = useState<any>(null);
   const vantaRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
 
   // Featured games data
   const gameModesList = [
@@ -128,6 +129,22 @@ const Landing = () => {
     return () => clearInterval(timer);
   }, []);
 
+  // Parallax and header glow effect
+  useEffect(() => {
+    const handleScroll = () => {
+      // Header glow
+      if (headerRef.current) {
+        if (window.scrollY > 10) {
+          headerRef.current.classList.add('header-glow');
+        } else {
+          headerRef.current.classList.remove('header-glow');
+        }
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <div className="relative min-h-screen overflow-hidden">
       {/* Vanta.js Background */}
@@ -136,7 +153,7 @@ const Landing = () => {
       {/* Content Container */}
       <div className="relative z-10 min-h-screen bg-transparent text-white">
         {/* Header */}
-        <header className="w-full px-6 py-4 flex justify-between items-center glass-effect-strong sticky top-0 z-50">
+        <header ref={headerRef} className="w-full px-6 py-4 flex justify-between items-center glass-effect-strong fixed top-0 left-0 z-50 transition-all duration-300">
           <div className="flex items-center gap-1">
             <img src="/logo.png" alt="Model Arena Logo" className="h-12 w-12 align-middle" />
             <div className="text-2xl font-bold bg-gradient-to-r from-[#FF3CBD] to-[#FF85E1] text-transparent bg-clip-text font-pixel align-middle">

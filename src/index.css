@@ -197,3 +197,25 @@
     opacity: 0;
   }
 }
+
+/* Neon Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  background: #13002A;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #FF3CBD 0%, #00F2A9 100%);
+  border-radius: 8px;
+  box-shadow: 0 0 8px #FF3CBD, 0 0 16px #00F2A9;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #00F2A9 0%, #FF3CBD 100%);
+}
+
+/* Header Glow on Scroll */
+.header-glow {
+  box-shadow: 0 0 32px 0 #00F2A9, 0 0 8px 0 #FF3CBD;
+  filter: drop-shadow(0 0 8px #FF3CBD) drop-shadow(0 0 16px #00F2A9);
+  background: rgba(19,0,42,0.85);
+  transition: box-shadow 0.4s, background 0.4s;
+}

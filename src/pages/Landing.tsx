@@ -75,21 +75,21 @@ const Landing = () => {
   const gameModes = [
     {
       title: "Playground",
-      description: "Practice and experiment with AI models in a sandbox environment",
+      description: "Create and test your AI models in a sandbox environment where you can make them play against each other",
       icon: "🎮",
-      features: ["Free practice", "Model testing", "No rankings"]
+      features: ["Model vs Model testing", "Custom model training", "Performance analytics", "No competitive pressure"]
     },
     {
-      title: "HVM Arena",
-      description: "Challenge high-performance models in competitive matches",
-      icon: "⚡",
-      features: ["Ranked matches", "Performance tracking", "Rewards"]
+      title: "Human vs Model",
+      description: "Challenge your own AI models directly in head-to-head matches",
+      icon: "👤",
+      features: ["Direct model testing", "Real-time feedback", "Model improvement insights", "Personal leaderboards"]
     },
     {
-      title: "Tournament",
-      description: "Compete in organized tournaments with top AI models",
+      title: "Arena",
+      description: "Compete in the global competitive scene where models battle for supremacy",
       icon: "🏆",
-      features: ["Weekly events", "Prize pools", "Global rankings"]
+      features: ["Global rankings", "ELO rating system", "Tournament participation", "Model reputation"]
     }
   ];
 
@@ -137,8 +137,11 @@ const Landing = () => {
       <div className="relative z-10 min-h-screen bg-transparent text-white">
         {/* Header */}
         <header className="w-full px-6 py-4 flex justify-between items-center glass-effect-strong sticky top-0 z-50">
-          <div className="text-2xl font-bold bg-gradient-to-r from-[#FF3CBD] to-[#FF85E1] text-transparent bg-clip-text">
-            Model Arena
+          <div className="flex items-center gap-1">
+            <img src="/logo.png" alt="Model Arena Logo" className="h-12 w-12 align-middle" />
+            <div className="text-2xl font-bold bg-gradient-to-r from-[#FF3CBD] to-[#FF85E1] text-transparent bg-clip-text font-pixel align-middle">
+              Model Arena
+            </div>
           </div>
           <nav className="flex gap-8 items-center">
             {['Home', 'About', 'Games', 'Models'].map((item) => (
@@ -146,41 +149,41 @@ const Landing = () => {
                 {item}
               </a>
             ))}
-            <Button className="glass-button px-6 py-2 text-white font-semibold hover:scale-105 transform transition-all duration-300 border-[#FF3CBD] hover:border-[#00F2A9] bg-gradient-to-r hover:from-[#FF3CBD]/10 hover:to-[#00F2A9]/10">
+            <Button className="glass-button px-6 py-2 text-white font-semibold hover:scale-105 transform transition-all duration-300 border-[#FF3CBD] hover:border-[#00F2A9] bg-gradient-to-r from-[#FF3CBD]/20 to-[#00F2A9]/20 hover:from-[#FF3CBD]/40 hover:to-[#00F2A9]/40 backdrop-blur-sm font-pixel">
               Get Started
             </Button>
           </nav>
         </header>
 
         {/* Hero Section */}
-        <section className="relative pt-20 pb-32 px-6">
+        <section className="relative pt-12 pb-32 px-6">
           <div className="relative z-10 max-w-6xl mx-auto">
-            <h1 className="text-7xl font-bold text-center mb-6 cyberpunk-text">
+            <h1 className="text-7xl font-bold text-center mb-4 cyberpunk-text font-pixel">
               <span className="bg-gradient-to-r from-[#FF3CBD] to-[#FF85E1] text-transparent bg-clip-text">
-                BATTLE WITH AI MODELS
+                BUILD. BATTLE. DOMINATE.
               </span>
             </h1>
-            <p className="text-center text-gray-400 text-xl mb-8 max-w-2xl mx-auto">
-              Challenge the most advanced AI models in strategic games. Train, compete, and rise through the ranks.
+            <p className="text-center text-gray-400 text-xl mb-10 max-w-2xl mx-auto font-script">
+              Unleash your creativity—build and train custom AI models for classic and modern strategy games.
             </p>
-            <div className="flex justify-center gap-8 mb-12">
+            <div className="flex justify-center gap-8 mb-12 ml-8 mt-16">
               <div className="glass-card p-8 text-center rounded-lg">
-                <div className="text-4xl font-bold text-[#FF3CBD]">3</div>
-                <div className="text-gray-400">Game Modes</div>
+                <div className="text-4xl font-bold text-[#FF3CBD] font-pixel">3</div>
+                <div className="text-gray-400 font-pixel">Game Modes</div>
               </div>
               <div className="glass-card p-8 text-center rounded-lg">
-                <div className="text-4xl font-bold text-[#00F2A9]">1v1</div>
-                <div className="text-gray-400">Real-time Matches</div>
+                <div className="text-4xl font-bold text-[#00F2A9] font-pixel">AI vs AI</div>
+                <div className="text-gray-400 font-pixel">Real-Time Matches</div>
               </div>
               <div className="glass-card p-8 text-center rounded-lg">
-                <div className="text-4xl font-bold text-[#FF3CBD]">ELO</div>
-                <div className="text-gray-400">Ranking System</div>
+                <div className="text-4xl font-bold text-[#FF3CBD] font-pixel">5+</div>
+                <div className="text-gray-400 font-pixel">Strategy Games</div>
               </div>
             </div>
-            <div className="flex justify-center">
+            <div className="flex justify-center mt-32">
               <Button 
                 onClick={() => navigate('/games')}
-                className="glass-button px-12 py-6 text-2xl font-bold text-white hover:scale-105 transform transition-all duration-300 border-[#FF3CBD] hover:border-[#00F2A9] bg-gradient-to-r hover:from-[#FF3CBD]/10 hover:to-[#00F2A9]/10 group"
+                className="glass-button px-12 py-6 text-2xl font-bold text-white hover:scale-105 transform transition-all duration-300 border-[#FF3CBD] hover:border-[#00F2A9] bg-gradient-to-r from-[#FF3CBD]/20 to-[#00F2A9]/20 hover:from-[#FF3CBD]/40 hover:to-[#00F2A9]/40 backdrop-blur-sm group font-pixel"
               >
                 Start Playing
                 <span className="absolute inset-0 glass-effect-light opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg"></span>
@@ -193,7 +196,7 @@ const Landing = () => {
         <section className="py-20 px-6 relative">
           <div className="max-w-6xl mx-auto">
             <div className="glass-effect-strong p-12 rounded-2xl backdrop-blur-2xl">
-              <h2 className="text-4xl font-bold mb-8 text-center">
+              <h2 className="text-4xl font-bold mb-8 text-center font-pixel">
                 <span className="text-[#FF3CBD]">Game</span>
                 <span className="text-[#00F2A9]"> Modes</span>
               </h2>
@@ -201,14 +204,14 @@ const Landing = () => {
                 {gameModes.map((mode, index) => (
                   <div 
                     key={index}
-                    className="glass-card p-8 rounded-xl text-center transform hover:scale-105 transition-all duration-300"
+                    className="glass-card p-8 rounded-xl text-center transform hover:scale-105 transition-all duration-300 flex flex-col h-full"
                   >
                     <div className="text-4xl mb-4">{mode.icon}</div>
-                    <h3 className="text-2xl font-bold mb-3 bg-gradient-to-r from-[#FF3CBD] to-[#00F2A9] text-transparent bg-clip-text">
+                    <h3 className="text-2xl font-bold mb-3 bg-gradient-to-r from-[#FF3CBD] to-[#00F2A9] text-transparent bg-clip-text font-pixel">
                       {mode.title}
                     </h3>
-                    <p className="text-gray-300 mb-6">{mode.description}</p>
-                    <ul className="space-y-2">
+                    <p className="text-gray-300 mb-6 flex-grow">{mode.description}</p>
+                    <ul className="space-y-2 mb-6">
                       {mode.features.map((feature, i) => (
                         <li key={i} className="text-sm text-gray-400 flex items-center justify-center">
                           <span className="w-2 h-2 bg-[#FF3CBD] rounded-full mr-2"></span>
@@ -216,7 +219,7 @@ const Landing = () => {
                         </li>
                       ))}
                     </ul>
-                    <Button className="glass-button mt-6 w-full">
+                    <Button className="glass-button w-full mt-auto hover:scale-105 transform transition-all duration-300 border-[#FF3CBD] hover:border-[#00F2A9] bg-gradient-to-r from-[#FF3CBD]/20 to-[#00F2A9]/20 hover:from-[#FF3CBD]/40 hover:to-[#00F2A9]/40 backdrop-blur-sm font-pixel">
                       Enter {mode.title}
                     </Button>
                   </div>
@@ -231,11 +234,11 @@ const Landing = () => {
           <div className="max-w-6xl mx-auto">
             <div className="glass-effect-strong p-12 rounded-2xl backdrop-blur-2xl">
               <div className="flex justify-between items-center mb-12">
-                <h2 className="text-4xl font-bold">
+                <h2 className="text-4xl font-bold font-pixel">
                   <span className="text-[#FF3CBD]">Top Games</span>
                   <span className="text-[#00F2A9]"> Collection</span>
                 </h2>
-                <Button className="glass-button">
+                <Button className="glass-button hover:scale-105 transform transition-all duration-300 border-[#FF3CBD] hover:border-[#00F2A9] bg-gradient-to-r from-[#FF3CBD]/20 to-[#00F2A9]/20 hover:from-[#FF3CBD]/40 hover:to-[#00F2A9]/40 backdrop-blur-sm font-pixel">
                   Show All
                 </Button>
               </div>
@@ -260,7 +263,7 @@ const Landing = () => {
                       )}
                       {hoverCard === index && game.title === 'Tic Tac Toe' && (
                         <div className="absolute inset-0 glass-effect-strong flex items-end justify-center p-4 rounded-lg">
-                          <Button className="glass-button w-full">
+                          <Button className="glass-button w-full hover:scale-105 transform transition-all duration-300 border-[#FF3CBD] hover:border-[#00F2A9] bg-gradient-to-r from-[#FF3CBD]/20 to-[#00F2A9]/20 hover:from-[#FF3CBD]/40 hover:to-[#00F2A9]/40 backdrop-blur-sm font-pixel">
                             Play Now
                           </Button>
                         </div>
@@ -301,7 +304,7 @@ const Landing = () => {
               <span className="bg-[#13002A]/80 text-white text-2xl font-bold px-8 py-4 rounded-full border-2 border-[#FF3CBD] shadow-lg">Tournaments Coming Soon</span>
             </div>
             <div className="glass-effect-strong p-12 rounded-2xl backdrop-blur-2xl filter blur-sm opacity-60 pointer-events-none select-none">
-              <h2 className="text-4xl font-bold mb-4 text-center">
+              <h2 className="text-4xl font-bold mb-4 text-center font-pixel">
                 <span className="text-[#FF3CBD]">Special Tournament</span>
                 <span className="text-[#00F2A9]"> Coming Soon</span>
               </h2>
@@ -314,7 +317,7 @@ const Landing = () => {
                 ))}
               </div>
               <div className="text-center">
-                <Button className="glass-button px-12 py-4 text-xl">
+                <Button className="glass-button px-12 py-4 text-xl font-pixel">
                   Register Now
                 </Button>
               </div>
@@ -330,7 +333,7 @@ const Landing = () => {
               <span className="bg-[#13002A]/80 text-white text-2xl font-bold px-8 py-4 rounded-full border-2 border-[#FF3CBD] shadow-lg">Model Leaderboards Coming Soon</span>
             </div>
             <div className="glass-effect-strong p-12 rounded-2xl backdrop-blur-2xl filter blur-sm opacity-60 pointer-events-none select-none">
-              <h2 className="text-4xl font-bold mb-12">
+              <h2 className="text-4xl font-bold mb-12 font-pixel">
                 <span className="text-[#FF3CBD]">Top Models</span>
                 <span className="text-[#00F2A9]"> Leaderboard</span>
               </h2>
@@ -358,7 +361,7 @@ const Landing = () => {
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="text-[#00F2A9] text-xl font-bold">{model.change}</div>
-                      <Button className="glass-button">
+                      <Button className="glass-button font-pixel">
                         Challenge
                       </Button>
                     </div>
@@ -377,20 +380,20 @@ const Landing = () => {
               <span className="bg-[#13002A]/80 text-white text-2xl font-bold px-8 py-4 rounded-full border-2 border-[#FF3CBD] shadow-lg">Community Coming Soon</span>
             </div>
             <div className="glass-effect-strong p-12 rounded-2xl backdrop-blur-2xl filter blur-sm opacity-60 pointer-events-none select-none text-center">
-              <h2 className="text-4xl font-bold mb-6">
+              <h2 className="text-4xl font-bold mb-6 font-pixel">
                 <span className="text-[#FF3CBD]">Join Our</span>
                 <span className="text-[#00F2A9]"> Community</span>
               </h2>
-              <p className="text-gray-300 mb-8 text-lg">
+              <p className="text-gray-300 mb-8 text-lg font-script">
                 Get updates about new models, tournaments, and exclusive events.
               </p>
               <div className="flex gap-4 justify-center">
                 <input
                   type="email"
                   placeholder="Enter your email"
-                  className="glass-input px-6 py-4 rounded-full w-96 text-lg focus:outline-none"
+                  className="glass-input px-6 py-4 rounded-full w-96 text-lg focus:outline-none font-script"
                 />
-                <Button className="glass-button px-8 py-4 text-lg">
+                <Button className="glass-button px-8 py-4 text-lg font-script">
                   Join Now
                 </Button>
               </div>
@@ -416,8 +419,11 @@ const Landing = () => {
         <footer className="glass-effect-strong py-12 px-6">
           <div className="max-w-6xl mx-auto">
             <div className="flex justify-between items-center mb-8">
-              <div className="text-2xl font-bold bg-gradient-to-r from-[#FF3CBD] to-[#FF85E1] text-transparent bg-clip-text">
-                Model Arena
+              <div className="flex items-center gap-1">
+                <img src="/logo.png" alt="Model Arena Logo" className="h-12 w-12 align-middle" />
+                <div className="text-2xl font-bold bg-gradient-to-r from-[#FF3CBD] to-[#FF85E1] text-transparent bg-clip-text font-pixel align-middle">
+                  Model Arena
+                </div>
               </div>
               <div className="flex gap-8">
                 {['Home', 'About', 'Games', 'Models'].map((item) => (

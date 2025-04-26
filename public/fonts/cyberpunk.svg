@@ -1,0 +1,26 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" >
+<svg xmlns="http://www.w3.org/2000/svg">
+<defs>
+<font id="cyberpunk" horiz-adv-x="1024">
+  <font-face font-family="Cyberpunk"
+    units-per-em="1024"
+    ascent="960"
+    descent="-64"
+  />
+  <missing-glyph horiz-adv-x="1024" />
+  
+  <!-- Basic Latin characters with cyberpunk styling -->
+  <glyph unicode="A" horiz-adv-x="1024"
+    d="M512 832L832 128H192L512 832zM448 256H576L512 448L448 256z" />
+  
+  <glyph unicode="B" horiz-adv-x="1024"
+    d="M192 128V832H576Q704 832 768 768T832 640Q832 576 800 528T704 464Q768 448 800 400T832 288Q832 208 768 168T576 128H192zM320 528V704H576Q624 704 648 680T672 640Q672 616 648 592T576 568H320zM320 256V432H576Q624 432 648 408T672 368Q672 344 648 320T576 296H320z" />
+  
+  <glyph unicode="C" horiz-adv-x="1024"
+    d="M832 288L704 224Q672 192 624 176T528 160Q432 160 368 224T304 368V592Q304 672 368 736T528 800Q576 800 624 784T704 736L832 672V288z" />
+  
+  <!-- Add more glyphs as needed -->
+</font>
+</defs>
+</svg> 

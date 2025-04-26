@@ -151,7 +151,7 @@ const Landing = () => {
       <div ref={vantaRef} className="fixed inset-0 w-full h-full -z-10" />
 
       {/* Content Container */}
-      <div className="relative z-10 min-h-screen bg-transparent text-white">
+      <div className="relative z-10 min-h-screen bg-transparent text-white pt-24">
         {/* Header */}
         <header ref={headerRef} className="w-full px-6 py-4 flex justify-between items-center glass-effect-strong fixed top-0 left-0 z-50 transition-all duration-300">
           <div className="flex items-center gap-1">

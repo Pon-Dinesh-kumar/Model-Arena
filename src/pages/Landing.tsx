@@ -21,30 +21,30 @@ const Landing = () => {
 
   // Featured games data
   const gameModesList = [
-    { key: 'playground', icon: '🎮', label: 'Playground' },
-    { key: 'hvm', icon: '⚡', label: 'HVM Arena' },
-    { key: 'tournament', icon: '🏆', label: 'Tournament' },
+    { key: 'playground', icon: '🎮', label: 'Playground', desc: 'Practice and experiment with AI models in a sandbox environment.' },
+    { key: 'hvm', icon: '⚡', label: 'HVM Arena', desc: 'Challenge high-performance models in competitive matches.' },
+    { key: 'tournament', icon: '🏆', label: 'Tournament', desc: 'Compete in organized tournaments with top AI models.' },
   ];
 
   const featuredGames = [
     {
       title: "Tic Tac Toe",
       image: "/games/tictactoe-3d.png",
-      availableModes: ['playground'],
+      availableModes: ['playground', 'hvm', 'tournament'],
     },
     {
-      title: "Chess Master",
+      title: "Rock Paper Scissors",
+      image: "/games/rps.png",
+      availableModes: [],
+    },
+    {
+      title: "Chess",
       image: "/games/chess.png",
       availableModes: [],
     },
     {
-      title: "Connect Four",
-      image: "/games/connect4.png",
-      availableModes: [],
-    },
-    {
-      title: "Battleship",
-      image: "/games/battleship.png",
+      title: "Checkers",
+      image: "/games/checkers.png",
       availableModes: [],
     }
   ];
@@ -55,19 +55,19 @@ const Landing = () => {
       name: "AlphaZero",
       eth: "9.456",
       change: "+18%",
-      avatar: "/models/alpha.jpg"
+      avatar: "/profile/profile5.png"
     },
     {
       name: "DeepMind",
       eth: "5.891",
       change: "+11%",
-      avatar: "/models/deep.jpg"
+      avatar: "/profile/profile6.png"
     },
     {
       name: "NeuralNet",
       eth: "4.029",
       change: "+13%",
-      avatar: "/models/neural.jpg"
+      avatar: "/profile/profile7.png"
     }
   ];
 
@@ -271,10 +271,18 @@ const Landing = () => {
                       {gameModesList.map((mode) => (
                         <span
                           key={mode.key}
-                          className={`text-2xl ${game.availableModes.includes(mode.key) ? '' : 'opacity-30 grayscale'}`}
+                          className={`relative text-2xl cursor-pointer group transition-transform duration-200 ${game.availableModes.includes(mode.key) ? 'hover:scale-125 hover:text-[#FF3CBD] focus:text-[#00F2A9] neon-glow' : 'opacity-30 grayscale'}`}
                           title={mode.label}
                         >
-                          {mode.icon}
+                          <span className="inline-block transition-transform duration-200 group-hover:scale-125 group-hover:animate-bounce">{mode.icon}</span>
+                          {game.availableModes.includes(mode.key) && (
+                            <span className="absolute left-1/2 top-full mt-2 z-20 hidden group-hover:flex flex-col items-center w-max">
+                              <span className="glass-effect-strong px-3 py-1 rounded-md text-xs text-white shadow-xl border border-[#FF3CBD] animate-fade-in flex flex-col items-center gap-1 min-w-[120px]">
+                                <span className="font-bold text-[#FF3CBD]">{mode.label}</span>
+                                <span className="text-gray-300 truncate w-full text-center">{mode.desc}</span>
+                              </span>
+                            </span>
+                          )}
                         </span>
                       ))}
                     </div>
@@ -287,8 +295,12 @@ const Landing = () => {
 
         {/* Update Tournament section */}
         <section className="py-20 px-6 relative">
-          <div className="max-w-6xl mx-auto">
-            <div className="glass-effect-strong p-12 rounded-2xl backdrop-blur-2xl">
+          <div className="max-w-6xl mx-auto relative">
+            {/* Overlay label */}
+            <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
+              <span className="bg-[#13002A]/80 text-white text-2xl font-bold px-8 py-4 rounded-full border-2 border-[#FF3CBD] shadow-lg">Tournaments Coming Soon</span>
+            </div>
+            <div className="glass-effect-strong p-12 rounded-2xl backdrop-blur-2xl filter blur-sm opacity-60 pointer-events-none select-none">
               <h2 className="text-4xl font-bold mb-4 text-center">
                 <span className="text-[#FF3CBD]">Special Tournament</span>
                 <span className="text-[#00F2A9]"> Coming Soon</span>
@@ -312,8 +324,12 @@ const Landing = () => {
 
         {/* Update Leaderboard section */}
         <section className="py-20 px-6">
-          <div className="max-w-6xl mx-auto">
-            <div className="glass-effect-strong p-12 rounded-2xl backdrop-blur-2xl">
+          <div className="max-w-6xl mx-auto relative">
+            {/* Overlay label */}
+            <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
+              <span className="bg-[#13002A]/80 text-white text-2xl font-bold px-8 py-4 rounded-full border-2 border-[#FF3CBD] shadow-lg">Model Leaderboards Coming Soon</span>
+            </div>
+            <div className="glass-effect-strong p-12 rounded-2xl backdrop-blur-2xl filter blur-sm opacity-60 pointer-events-none select-none">
               <h2 className="text-4xl font-bold mb-12">
                 <span className="text-[#FF3CBD]">Top Models</span>
                 <span className="text-[#00F2A9]"> Leaderboard</span>
@@ -355,8 +371,12 @@ const Landing = () => {
 
         {/* Update Newsletter section */}
         <section className="py-20 px-6">
-          <div className="max-w-3xl mx-auto">
-            <div className="glass-effect-strong p-12 rounded-2xl backdrop-blur-2xl text-center">
+          <div className="max-w-3xl mx-auto relative">
+            {/* Overlay label */}
+            <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
+              <span className="bg-[#13002A]/80 text-white text-2xl font-bold px-8 py-4 rounded-full border-2 border-[#FF3CBD] shadow-lg">Community Coming Soon</span>
+            </div>
+            <div className="glass-effect-strong p-12 rounded-2xl backdrop-blur-2xl filter blur-sm opacity-60 pointer-events-none select-none text-center">
               <h2 className="text-4xl font-bold mb-6">
                 <span className="text-[#FF3CBD]">Join Our</span>
                 <span className="text-[#00F2A9]"> Community</span>

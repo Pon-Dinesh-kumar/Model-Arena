@@ -567,4 +567,33 @@
 .glass-effect-light:hover {
   background: rgba(255, 255, 255, 0.05);
   box-shadow: 0 8px 32px 0 rgba(255, 60, 189, 0.05);
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease;
+}
+
+.neon-glow {
+  text-shadow: 0 0 8px #FF3CBD, 0 0 16px #00F2A9;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.animate-bounce {
+  animation: bounce 0.4s;
+}
+
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.animate-bounce-slow {
+  animation: bounce-slow 1.2s infinite;
 } 

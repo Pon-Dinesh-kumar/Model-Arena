@@ -58,18 +58,14 @@ const Playground = () => {
   
   // Model state
   const [models, setModels] = useState<{
-    model1: ModelFunction | null;
     model2: ModelFunction | null;
   }>({
-    model1: null,
     model2: null
   });
-  const [model1ValidationError, setModel1ValidationError] = useState<string | null>(null);
   const [model2ValidationError, setModel2ValidationError] = useState<string | null>(null);
   const [modelThinking, setModelThinking] = useState<1 | 2 | null>(null);
   
   // Model refs for immediate access
-  const model1Ref = useRef<ModelFunction | null>(null);
   const model2Ref = useRef<ModelFunction | null>(null);
   
   // UI state
@@ -78,11 +74,8 @@ const Playground = () => {
   const [statusMessage, setStatusMessage] = useState("Welcome to The Super One");
   
   // Input fields state
-  const [model1Name, setModel1Name] = useState("");
   const [model2Name, setModel2Name] = useState("");
-  const [model1ApiKey, setModel1ApiKey] = useState("");
   const [model2ApiKey, setModel2ApiKey] = useState("");
-  const [model1Input, setModel1Input] = useState("");
   const [model2Input, setModel2Input] = useState("");
   const [model1Type, setModel1Type] = useState<"function" | "url" | "demo" | "file">("demo");
   const [model2Type, setModel2Type] = useState<"function" | "url" | "demo" | "file">("demo");
@@ -90,7 +83,7 @@ const Playground = () => {
   const [model2Demo, setModel2Demo] = useState<"center" | "corners" | "random">("corners");
   
   // Game statistics
-  const [model1Stats, setModel1Stats] = useState<ModelStatsType>(() => initializeStats(model1Name));
+  const [model1Stats, setModel1Stats] = useState<ModelStatsType>(() => initializeStats("You"));
   const [model2Stats, setModel2Stats] = useState<ModelStatsType>(() => initializeStats(model2Name));
   
   // Refs
@@ -114,11 +107,18 @@ const Playground = () => {
   const [currentMatch, setCurrentMatch] = useState(0);
   const [isReplaying, setIsReplaying] = useState(false);
   
+  // Place this after all useState/useRef/useEffect hooks, before any function definitions
+  useEffect(() => {
+    if (gameInProgress && !gameOver && currentPlayer === 2) {
+      makeModelMove();
+    }
+  }, [currentPlayer, gameInProgress, gameOver]);
+  
   // Effect to update stats when names change
   useEffect(() => {
-    setModel1Stats(prev => ({ ...prev, name: model1Name }));
+    setModel1Stats(prev => ({ ...prev, name: "You" }));
     setModel2Stats(prev => ({ ...prev, name: model2Name }));
-  }, [model1Name, model2Name]);
+  }, [model2Name]);
   
   // Effect to sync game state with ref
   useEffect(() => {
@@ -132,12 +132,6 @@ const Playground = () => {
   }, [board, isPlayerTurn, gameState, gameInProgress, gameOver]);
   
   // Effect to sync model refs with state
-  useEffect(() => {
-    if (models.model1) {
-      model1Ref.current = models.model1;
-    }
-  }, [models.model1]);
-  
   useEffect(() => {
     if (models.model2) {
       model2Ref.current = models.model2;
@@ -178,7 +172,7 @@ const Playground = () => {
       
       setFlippedResult(result);
       setCurrentPlayer(result);
-      setStatusMessage(`${result === 1 ? model1Name : model2Name} goes first`);
+      setStatusMessage(`You goes first`);
       
       // Hide coin after showing result
       setTimeout(() => {
@@ -188,11 +182,11 @@ const Playground = () => {
           console.log('[DEBUG] Starting first move...');
           
           // Verify models are still valid
-          const currentModel = result === 1 ? models.model1 : models.model2;
+          const currentModel = result === 1 ? models.model2 : models.model2;
           if (typeof currentModel !== 'function') {
             console.error('[ERROR] Model not valid before first move:');
             setGameInProgress(false);
-            setStatusMessage(`Error: ${result === 1 ? model1Name : model2Name} is not properly initialized`);
+            setStatusMessage(`Error: You is not properly initialized`);
             playSound('error');
             return;
           }
@@ -201,7 +195,7 @@ const Playground = () => {
           const currentBoard = [...board];
           console.log(`[DEBUG] Starting first move with board:`, JSON.stringify(currentBoard));
           
-          makeModelMove(result);
+          makeModelMove();
         }, 500);
       }, 1500);
     }, 1500);
@@ -216,53 +210,9 @@ const Playground = () => {
       gameState: gameState
     });
     
-    let model1Function: ModelFunction | null = null;
     let model2Function: ModelFunction | null = null;
     
-    setModel1ValidationError(null);
     setModel2ValidationError(null);
-    
-    // Initialize Model 1
-    try {
-      console.log(`[DEBUG] Initializing Model 1 (${model1Name}) with type: ${model1Type}`);
-      if (model1Type === "demo") {
-        try {
-          model1Function = createDemoModel(model1Name, model1Demo, 1);
-          console.log('[DEBUG] Model 1 function created:', typeof model1Function);
-          
-          // Verify the function was created properly
-          if (typeof model1Function !== 'function') {
-            throw new Error('Model 1 function was not created properly');
-          }
-          
-          // Validate the model
-          console.log('[DEBUG] Validating Model 1...');
-          const validationResult = await validateModel(model1Function);
-          if (!validationResult.valid) {
-            console.error('[ERROR] Model 1 validation failed:', validationResult.error);
-            setModel1ValidationError(validationResult.error || 'Validation failed');
-            return false;
-          }
-          console.log('[DEBUG] Model 1 validation successful');
-        } catch (error) {
-          console.error('[ERROR] Failed to create Model 1:', error);
-          setModel1ValidationError(`Error creating model: ${error}`);
-          return false;
-        }
-      } else if (model1Type === "function" && model1Input.trim()) {
-        model1Function = parseModelFunction(model1Input);
-      } else if (model1Type === "url" && model1Input.trim()) {
-        model1Function = randomModel;
-      } else if (model1Type === "file") {
-        model1Function = null;
-        setModel1Input('');
-      }
-    } catch (error) {
-      console.error("[ERROR] Error initializing Model 1:", error);
-      console.error("[ERROR] Model 1 error stack:", error.stack);
-      setModel1ValidationError(`Error: ${error}`);
-      return false;
-    }
     
     // Initialize Model 2
     try {
@@ -307,20 +257,19 @@ const Playground = () => {
     }
     
     // Set models if both are valid
-    if (model1Function && model2Function) {
+    if (model2Function) {
       console.log('[DEBUG] Both models initialized successfully');
       console.log('[DEBUG] Setting models in state...');
       
       // Set models in state
       setModels({
-        model1: model1Function,
         model2: model2Function
       });
       
       // Wait for state update to complete
       await new Promise<void>((resolve) => {
         const checkState = () => {
-          if (models.model1 && models.model2) {
+          if (models.model2) {
             console.log('[DEBUG] Model state updated successfully');
             resolve();
           } else {
@@ -340,238 +289,48 @@ const Playground = () => {
   };
   
   // Make a move for the current model
-  const makeModelMove = async (player: 1 | 2) => {
-    console.log(`[DEBUG] Starting makeModelMove for player ${player}`);
-    console.log(`[DEBUG] Game state: inProgress=${gameStateRef.current.inProgress}, over=${gameStateRef.current.over}`);
-    console.log(`[DEBUG] Current board:`, JSON.stringify(boardRef.current));
-    
-    // Double check game state
-    if (!gameStateRef.current.inProgress || gameStateRef.current.over) {
-      console.log('[DEBUG] Game not in progress or already over, returning');
-      console.log('[DEBUG] Current game state:', {
-        inProgress: gameStateRef.current.inProgress,
-        over: gameStateRef.current.over,
-        board: boardRef.current
-      });
-      return;
-    }
-    
-    // Get the current model and verify it's a function
-    const currentModel = player === 1 ? models.model1 : models.model2;
-    if (typeof currentModel !== 'function') {
-      console.error(`[ERROR] Model ${player} is not a function:`, currentModel);
+  const makeModelMove = async () => {
+    if (!gameInProgress || gameOver || currentPlayer !== 2) return;
+    setModelThinking(2);
+    setStatusMessage(`${model2Name || 'Model O'} is thinking...`);
+    const model = models.model2;
+    if (typeof model !== 'function') {
+      setStatusMessage('Model O is not properly initialized');
       setGameInProgress(false);
-      setStatusMessage(`Error: ${player === 1 ? model1Name : model2Name} is not properly initialized`);
+      setGameOver(true);
+      setModelThinking(null);
       return;
     }
-    
-    const playerStats = player === 1 ? model1Stats : model2Stats;
-    const setPlayerStats = player === 1 ? setModel1Stats : setModel2Stats;
-    
-    console.log(`[DEBUG] Setting thinking state for player ${player}`);
-    setStatusMessage(`${player === 1 ? model1Name : model2Name} is thinking...`);
-    setModelThinking(player);
-    
-    // Set timeout for move (10 seconds)
-    let timeoutTriggered = false;
-    const timeoutId = window.setTimeout(() => {
-      console.log(`[DEBUG] Timeout triggered for player ${player}`);
-      timeoutTriggered = true;
-      setPlayerStats({
-        ...playerStats,
-        timeouts: playerStats.timeouts + 1
-      });
-      
-      // End game due to timeout
-      const opponent = player === 1 ? 2 : 1;
-      setWinResult({
-        winner: opponent,
-        winningCells: []
-      });
-      
+    // Simulate AI thinking
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    const newBoard = await model([...board]);
+    setModelThinking(null);
+    setBoard(newBoard);
+    setModel2Stats(prev => ({ ...prev, totalMoves: prev.totalMoves + 1 }));
+    playSound('move');
+    const result = checkWinner(newBoard);
+    if (result.winner !== null || result.winningCells) {
+      setWinResult(result);
       setGameOver(true);
       setGameInProgress(false);
-      setModelThinking(null);
-      setStatusMessage(`${player === 1 ? model1Name : model2Name} timed out! ${player === 1 ? model2Name : model1Name} wins!`);
-    }, 10000);
-    
-    moveTimeoutRef.current = timeoutId;
-    
-    try {
-      // Start timing the move
-      const startTime = performance.now();
-      
-      // Create a copy of the current board state
-      const currentBoard = [...boardRef.current];
-      console.log(`[DEBUG] Calling model ${player} with board:`, JSON.stringify(currentBoard));
-      const newBoard = await currentModel(currentBoard);
-      console.log(`[DEBUG] Model ${player} returned board:`, JSON.stringify(newBoard));
-      
-      // Calculate move time
-      const moveTime = performance.now() - startTime;
-      
-      // Clear timeout if move was made in time
-      window.clearTimeout(timeoutId);
-      moveTimeoutRef.current = null;
-      
-      // If timeout was triggered, ignore the result
-      if (timeoutTriggered) {
-        console.log(`[DEBUG] Timeout was triggered, ignoring result`);
-        return;
-      }
-      
-      // Clear thinking state
-      console.log(`[DEBUG] Clearing thinking state for player ${player}`);
-      setModelThinking(null);
-      
-      // Validate the move
-      console.log(`[DEBUG] Validating move for player ${player}`);
-      const isValidMove = validateMove(currentBoard, newBoard, player);
-      console.log(`[DEBUG] Move validation result: ${isValidMove}`);
-      
-      if (isValidMove) {
-        // Update the board with the valid move
-        console.log(`[DEBUG] Updating board with valid move`);
-        setBoard(newBoard);
-        playSound('move');
-        
-        // Update stats with move time
-        const updatedStats = updateStatsWithMove(playerStats, moveTime);
-        
-        console.log(`[DEBUG] Updating stats for player ${player}:`, {
-          currentTotalMoves: playerStats.totalMoves,
-          currentTotalTime: playerStats.totalTime,
-          moveTime,
-          newTotalMoves: updatedStats.totalMoves,
-          newTotalTime: updatedStats.totalTime,
-          newAverageTime: updatedStats.averageTime
-        });
-        
-        setPlayerStats(updatedStats);
-        
-        // Check for game end conditions
-        const result = checkWinner(newBoard);
-        console.log(`[DEBUG] Game result:`, result);
-        
-        if (result.winner !== null || result.winningCells) {
-          // Game over, someone won
-          console.log(`[DEBUG] Game over - ${result.winner === 1 ? model1Name : model2Name} wins`);
-          setWinResult(result);
-          setGameOver(true);
-          setGameInProgress(false);
-          
-          // Play victory sound with increased volume
-          const audio = new Audio('/sounds/victory.mp3');
-          audio.volume = 0.8;
-          audio.play();
-          
-          // Update stats for winner and loser
-          if (result.winner === 1) {
-            setModel1Stats({
-              ...model1Stats,
-              wins: model1Stats.wins + 1
-            });
-            setModel2Stats({
-              ...model2Stats,
-              losses: model2Stats.losses + 1
-            });
-            setStatusMessage(`${model1Name} wins!`);
-          } else {
-            setModel2Stats({
-              ...model2Stats,
-              wins: model2Stats.wins + 1
-            });
-            setModel1Stats({
-              ...model1Stats,
-              losses: model1Stats.losses + 1
-            });
-            setStatusMessage(`${model2Name} wins!`);
-          }
-        } else if (newBoard.every(cell => cell !== null)) {
-          // Game over, it's a draw
-          console.log(`[DEBUG] Game over - Draw`);
-          setGameOver(true);
-          setGameInProgress(false);
-          playSound('draw');
-          
-          // Update draw stats for both models
-          setModel1Stats({
-            ...model1Stats,
-            draws: model1Stats.draws + 1
-          });
-          setModel2Stats({
-            ...model2Stats,
-            draws: model2Stats.draws + 1
-          });
-          
-          setStatusMessage(`Game over! It's a draw.`);
-        } else {
-          // Game continues, switch players
-          console.log(`[DEBUG] Game continues, switching to next player`);
-          const nextPlayer = player === 1 ? 2 : 1;
-          setCurrentPlayer(nextPlayer);
-          
-          // Let the next model make a move
-          setTimeout(() => {
-            console.log(`[DEBUG] Scheduling next move for player ${nextPlayer}`);
-            console.log('[DEBUG] Game state before next move:', {
-              inProgress: gameStateRef.current.inProgress,
-              over: gameStateRef.current.over,
-              board: newBoard
-            });
-            makeModelMove(nextPlayer);
-          }, 500);
-        }
+      if (result.winner === 2) {
+        setModel2Stats(prev => ({ ...prev, wins: prev.wins + 1 }));
+        setModel1Stats(prev => ({ ...prev, losses: prev.losses + 1 }));
+        setStatusMessage(`${model2Name || 'Model O'} wins!`);
+      } else if (result.winner === 1) {
+        setModel1Stats(prev => ({ ...prev, wins: prev.wins + 1 }));
+        setModel2Stats(prev => ({ ...prev, losses: prev.losses + 1 }));
+        setStatusMessage('You win!');
       } else {
-        // Invalid move
-        console.log(`[DEBUG] Invalid move detected`);
-        setPlayerStats({
-          ...playerStats,
-          invalidMoves: playerStats.invalidMoves + 1
-        });
-        
-        // End game due to invalid move
-        const opponent = player === 1 ? 2 : 1;
-        setWinResult({
-          winner: opponent,
-          winningCells: []
-        });
-        
-        setGameOver(true);
-        setGameInProgress(false);
-        playSound('error');
-        setStatusMessage(`${player === 1 ? model1Name : model2Name} made an invalid move! ${player === 1 ? model2Name : model1Name} wins.`);
+        setModel1Stats(prev => ({ ...prev, draws: prev.draws + 1 }));
+        setModel2Stats(prev => ({ ...prev, draws: prev.draws + 1 }));
+        setStatusMessage("It's a draw!");
       }
-    } catch (error) {
-      // Clear timeout
-      window.clearTimeout(timeoutId);
-      moveTimeoutRef.current = null;
-      setModelThinking(null);
-      
-      if (timeoutTriggered) {
-        console.log(`[DEBUG] Timeout was triggered, ignoring error`);
-        return;
-      }
-      
-      console.error(`[ERROR] Model ${player} error:`, error);
-      
-      // Update crash stats
-      setPlayerStats({
-        ...playerStats,
-        crashes: playerStats.crashes + 1
-      });
-      
-      // End game due to crash
-      const opponent = player === 1 ? 2 : 1;
-      setWinResult({
-        winner: opponent
-      });
-      
-      setGameOver(true);
-      setGameInProgress(false);
-      playSound('error');
-      setStatusMessage(`${player === 1 ? model1Name : model2Name} crashed! ${player === 1 ? model2Name : model1Name} wins.`);
+      return;
     }
+    // Not over, human's turn
+    setCurrentPlayer(1);
+    setStatusMessage('Your turn!');
   };
   
   // Start new game
@@ -593,10 +352,9 @@ const Playground = () => {
     }
     
     // Verify models are set
-    if (!models.model1 || !models.model2) {
+    if (!models.model2) {
       console.error('[ERROR] Models not properly initialized');
       console.error('[ERROR] Model state:', {
-        model1: !!models.model1,
         model2: !!models.model2
       });
       setStatusMessage("Error: Models not properly initialized");
@@ -621,7 +379,6 @@ const Playground = () => {
       inProgress: gameStateRef.current.inProgress,
       over: gameStateRef.current.over,
       board: board,
-      model1: !!models.model1,
       model2: !!models.model2
     });
     
@@ -673,15 +430,36 @@ const Playground = () => {
     }
   };
 
-  const handleCellClick = (index: number) => {
-    if (!isPlayerTurn || board[index] !== null) return;
-    
+  const handleCellClick = async (index: number) => {
+    if (!gameInProgress || gameOver || currentPlayer !== 1 || board[index] !== null) return;
+    // Human plays X (1)
     const newBoard = [...board];
-    newBoard[index] = 1; // Player is always 1 (X)
+    newBoard[index] = 1;
     setBoard(newBoard);
-    setIsPlayerTurn(false);
-    
-    // AI move logic here
+    setModel1Stats(prev => ({ ...prev, totalMoves: prev.totalMoves + 1 }));
+    playSound('move');
+    const result = checkWinner(newBoard);
+    if (result.winner !== null || result.winningCells) {
+      setWinResult(result);
+      setGameOver(true);
+      setGameInProgress(false);
+      if (result.winner === 1) {
+        setModel1Stats(prev => ({ ...prev, wins: prev.wins + 1 }));
+        setModel2Stats(prev => ({ ...prev, losses: prev.losses + 1 }));
+        setStatusMessage('You win!');
+      } else if (result.winner === 2) {
+        setModel2Stats(prev => ({ ...prev, wins: prev.wins + 1 }));
+        setModel1Stats(prev => ({ ...prev, losses: prev.losses + 1 }));
+        setStatusMessage(`${model2Name || 'Model O'} wins!`);
+      } else {
+        setModel1Stats(prev => ({ ...prev, draws: prev.draws + 1 }));
+        setModel2Stats(prev => ({ ...prev, draws: prev.draws + 1 }));
+        setStatusMessage("It's a draw!");
+      }
+      return;
+    }
+    // Not over, model's turn
+    setCurrentPlayer(2);
   };
 
   const handleResetGame = () => {
@@ -707,37 +485,30 @@ const Playground = () => {
   // Clear all data
   const clearAllData = () => {
     // Clear model names
-    setModel1Name("");
     setModel2Name("");
     
     // Clear model inputs
-    setModel1Input("");
     setModel2Input("");
     
     // Reset model types to demo
-    setModel1Type("demo");
     setModel2Type("demo");
     
     // Reset demo preferences
-    setModel1Demo("center");
     setModel2Demo("corners");
     
     // Clear validation errors
-    setModel1ValidationError(null);
     setModel2ValidationError(null);
     
     // Reset models
     setModels({
-      model1: null,
       model2: null
     });
     
     // Reset stats
-    setModel1Stats(initializeStats(""));
-    setModel2Stats(initializeStats(""));
+    setModel1Stats(initializeStats("You"));
+    setModel2Stats(initializeStats(model2Name));
     
     // Clear localStorage
-    localStorage.removeItem(`model_stats_${model1Name}`);
     localStorage.removeItem(`model_stats_${model2Name}`);
     
     // Reset game state
@@ -805,7 +576,7 @@ const Playground = () => {
           <div className="flex items-center gap-2">
             <img src="/logo.png" alt="Model Arena Logo" className="h-12 w-12" />
             <div className="text-2xl font-bold bg-gradient-to-r from-[#FF3CBD] to-[#FF85E1] text-transparent bg-clip-text font-pixel">
-              Tic Tac Toe PlaygroundS
+              Tic Tac Toe HvM
             </div>
           </div>
         </div>
@@ -827,189 +598,35 @@ const Playground = () => {
 
       <div className="container mx-auto px-4 py-24 relative z-10">
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* Left Side - Model X Config */}
+          {/* Left Side - Human Stats Only */}
           <div className="w-full lg:w-1/4">
-            {!gameInProgress && !gameOver ? (
-              <div className="bg-cyber-primary/80 backdrop-blur-sm rounded-2xl p-6 border-2 border-cyber-accent/30 shadow-cyber hover:shadow-cyber-glow transition-all duration-300 transform hover:scale-[1.02]">
-                <h2 className="text-xl font-bold text-cyber-light mb-4 flex items-center">
-                  <span className="text-cyber-accent mr-2 font-pixel">Model X</span>
-                  <div className="w-2 h-2 bg-cyber-accent rounded-full animate-cyber-pulse"></div>
-                </h2>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-cyber-light text-sm mb-2 font-pixel">Model Name</label>
-                    <input
-                      type="text"
-                      value={model1Name}
-                      onChange={(e) => setModel1Name(e.target.value)}
-                      className="w-full bg-cyber-secondary/50 border-2 border-cyber-accent/30 rounded-xl px-4 py-2 text-cyber-light text-sm focus:outline-none focus:border-cyber-accent focus:shadow-cyber-glow transition-all duration-300 font-mono"
-                      placeholder="Enter model name"
-                    />
+            <div className="bg-cyber-primary/80 backdrop-blur-sm rounded-2xl p-6 border-2 border-cyber-accent/30 shadow-cyber hover:shadow-cyber-glow transition-all duration-300 transform hover:scale-[1.02] flex flex-col gap-6 items-center">
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#FF3CBD] to-[#00F2A9] flex items-center justify-center text-4xl font-pixel text-white shadow-lg border-4 border-cyber-accent">😎</div>
+                <h2 className="text-xl font-bold text-cyber-accent font-pixel">You (X)</h2>
+              </div>
+              <div className="w-full mt-2">
+                <h3 className="text-lg font-bold text-cyber-light mb-3 font-pixel">Your Stats</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-cyber-secondary/50 rounded-xl p-3 border border-cyber-accent/30 hover:border-cyber-accent hover:shadow-cyber-glow transition-all duration-300">
+                    <p className="text-cyber-light text-xs font-pixel">Wins</p>
+                    <p className="text-cyber-accent text-xl font-bold font-mono">{model1Stats.wins}</p>
                   </div>
-                  <div>
-                    <label className="block text-cyber-light text-sm mb-2 font-pixel">Model Type</label>
-                    <Tabs value={model1Type} onValueChange={(v) => setModel1Type(v as any)} className="w-full">
-                      <TabsList className="w-full bg-cyber-secondary/50 rounded-xl p-1 grid grid-cols-4 gap-1">
-                        <TabsTrigger value="demo" className="data-[state=active]:bg-cyber-accent data-[state=active]:text-white rounded-lg font-pixel">Demo</TabsTrigger>
-                        <TabsTrigger value="function" className="data-[state=active]:bg-cyber-accent data-[state=active]:text-white rounded-lg font-pixel">Function</TabsTrigger>
-                        <TabsTrigger value="url" className="data-[state=active]:bg-cyber-accent data-[state=active]:text-white rounded-lg font-pixel">URL</TabsTrigger>
-                        <TabsTrigger value="file" className="data-[state=active]:bg-cyber-accent data-[state=active]:text-white rounded-lg font-pixel">File</TabsTrigger>
-                      </TabsList>
-                      <TabsContent value="demo" className="pt-2">
-                        <select 
-                          value={model1Demo} 
-                          onChange={(e) => setModel1Demo(e.target.value as any)}
-                          className="w-full bg-cyber-secondary/50 border border-cyber-accent/30 rounded px-3 py-1.5 text-cyber-light text-sm focus:outline-none focus:border-cyber-accent focus:shadow-cyber-glow transition-all duration-300"
-                        >
-                          <option value="center">Prefer Center</option>
-                          <option value="corners">Prefer Corners</option>
-                          <option value="random">Random Moves</option>
-                        </select>
-                      </TabsContent>
-                      <TabsContent value="function" className="pt-2">
-                        <Textarea 
-                          placeholder="Enter JavaScript function here..."
-                          value={model1Input}
-                          onChange={(e) => setModel1Input(e.target.value)}
-                          className="min-h-[100px] font-mono text-xs bg-cyber-secondary/50 text-cyber-light border-cyber-accent/30 focus:border-cyber-accent focus:shadow-cyber-glow transition-all duration-300"
-                        />
-                      </TabsContent>
-                      <TabsContent value="url" className="pt-2">
-                        <Input
-                          placeholder="Enter TensorFlow.js model URL"
-                          value={model1Input}
-                          onChange={(e) => setModel1Input(e.target.value)}
-                          className="bg-cyber-secondary/50 text-cyber-light text-sm border-cyber-accent/30 focus:border-cyber-accent focus:shadow-cyber-glow transition-all duration-300"
-                        />
-                      </TabsContent>
-                      <TabsContent value="file" className="pt-2">
-                        <ModelFileUpload 
-                          onFileSelect={async (file) => {
-                            try {
-                              const loadedModel = await loadModelFromFile(file);
-                              setModels({
-                                model1: loadedModel,
-                                model2: models.model2
-                              });
-                              setModel1Input('');
-                              toast({
-                                title: "Model loaded successfully",
-                                description: "The model file has been loaded and is ready to use.",
-                              });
-                            } catch (error) {
-                              console.error("Error loading model:", error);
-                              setModel1ValidationError(`Failed to load model: ${error}`);
-                            }
-                          }}
-                          disabled={gameInProgress}
-                        />
-                      </TabsContent>
-                    </Tabs>
+                  <div className="bg-cyber-secondary/50 rounded-xl p-3 border border-cyber-accent/30 hover:border-cyber-accent hover:shadow-cyber-glow transition-all duration-300">
+                    <p className="text-cyber-light text-xs font-pixel">Losses</p>
+                    <p className="text-cyber-accent text-xl font-bold font-mono">{model1Stats.losses}</p>
                   </div>
-                  {model1ValidationError && (
-                    <Alert variant="destructive" className="bg-cyber-warning/20 border-2 border-cyber-warning rounded-xl">
-                      <AlertDescription className="font-pixel text-sm">{model1ValidationError}</AlertDescription>
-                    </Alert>
-                  )}
-                  
-                  {/* Model 1 Stats with updated styling */}
-                  <div className="mt-6">
-                    <h3 className="text-lg font-bold text-cyber-light mb-3 font-pixel">Model Statistics</h3>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-cyber-secondary/50 rounded-xl p-3 border border-cyber-accent/30 hover:border-cyber-accent hover:shadow-cyber-glow transition-all duration-300">
-                        <p className="text-cyber-light text-xs font-pixel">Wins</p>
-                        <p className="text-cyber-accent text-xl font-bold font-mono">{model1Stats.wins}</p>
-                      </div>
-                      <div className="bg-cyber-secondary/50 rounded-xl p-3 border border-cyber-accent/30 hover:border-cyber-accent hover:shadow-cyber-glow transition-all duration-300">
-                        <p className="text-cyber-light text-xs font-pixel">Losses</p>
-                        <p className="text-cyber-accent text-xl font-bold font-mono">{model1Stats.losses}</p>
-                      </div>
-                      <div className="bg-cyber-secondary/50 rounded-xl p-3 border border-cyber-accent/30 hover:border-cyber-accent hover:shadow-cyber-glow transition-all duration-300">
-                        <p className="text-cyber-light text-xs font-pixel">Draws</p>
-                        <p className="text-cyber-accent text-xl font-bold font-mono">{model1Stats.draws}</p>
-                      </div>
-                      <div className="bg-cyber-secondary/50 rounded-xl p-3 border border-cyber-accent/30 hover:border-cyber-accent hover:shadow-cyber-glow transition-all duration-300">
-                        <p className="text-cyber-light text-xs font-pixel">Win Rate</p>
-                        <p className="text-cyber-accent text-xl font-bold font-mono">
-                          {model1Stats.wins + model1Stats.losses + model1Stats.draws > 0 
-                            ? `${Math.round((model1Stats.wins / (model1Stats.wins + model1Stats.losses + model1Stats.draws)) * 100)}%`
-                            : '0%'}
-                        </p>
-                      </div>
-                      <div className="bg-cyber-secondary/50 rounded-xl p-3 border border-cyber-accent/30 hover:border-cyber-accent hover:shadow-cyber-glow transition-all duration-300">
-                        <p className="text-cyber-light text-xs font-pixel">Timeouts</p>
-                        <p className="text-cyber-accent text-xl font-bold font-mono">{model1Stats.timeouts}</p>
-                      </div>
-                      <div className="bg-cyber-secondary/50 rounded-xl p-3 border border-cyber-accent/30 hover:border-cyber-accent hover:shadow-cyber-glow transition-all duration-300">
-                        <p className="text-cyber-light text-xs font-pixel">Coin Flips Won</p>
-                        <p className="text-cyber-accent text-xl font-bold font-mono">{model1Stats.coinFlipsWon || 0}</p>
-                      </div>
-                      <div className="bg-cyber-secondary/50 rounded-xl p-3 border border-cyber-accent/30 hover:border-cyber-accent hover:shadow-cyber-glow transition-all duration-300">
-                        <p className="text-cyber-light text-xs font-pixel">Total Time</p>
-                        <p className="text-cyber-accent text-xl font-bold font-mono">{model1Stats.totalTime.toFixed(0)}ms</p>
-                      </div>
-                      <div className="bg-cyber-secondary/50 rounded-xl p-3 border border-cyber-accent/30 hover:border-cyber-accent hover:shadow-cyber-glow transition-all duration-300">
-                        <p className="text-cyber-light text-xs font-pixel">Avg. Time</p>
-                        <p className="text-cyber-accent text-xl font-bold font-mono">{model1Stats.averageTime.toFixed(0)}ms</p>
-                      </div>
-                    </div>
+                  <div className="bg-cyber-secondary/50 rounded-xl p-3 border border-cyber-accent/30 hover:border-cyber-accent hover:shadow-cyber-glow transition-all duration-300">
+                    <p className="text-cyber-light text-xs font-pixel">Draws</p>
+                    <p className="text-cyber-accent text-xl font-bold font-mono">{model1Stats.draws}</p>
+                  </div>
+                  <div className="bg-cyber-secondary/50 rounded-xl p-3 border border-cyber-accent/30 hover:border-cyber-accent hover:shadow-cyber-glow transition-all duration-300">
+                    <p className="text-cyber-light text-xs font-pixel">Win Rate</p>
+                    <p className="text-cyber-accent text-xl font-bold font-mono">{model1Stats.wins + model1Stats.losses + model1Stats.draws > 0 ? `${Math.round((model1Stats.wins / (model1Stats.wins + model1Stats.losses + model1Stats.draws)) * 100)}%` : '0%'}</p>
                   </div>
                 </div>
               </div>
-            ) : (
-              <div className="bg-cyber-primary/80 backdrop-blur-sm rounded-2xl p-6 border-2 border-cyber-accent/30 shadow-cyber hover:shadow-cyber-glow transition-all duration-300">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg font-bold text-cyber-accent">{model1Name || "Model X"}</h3>
-                  <div className={`w-2 h-2 rounded-full ${modelThinking === 1 ? 'bg-cyber-accent animate-cyber-pulse' : 'bg-cyber-accent/30'}`}></div>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-cyber-secondary/50 rounded-lg p-2">
-                    <p className="text-cyber-light text-xs">Wins</p>
-                    <p className="text-cyber-accent text-lg font-bold">{model1Stats.wins}</p>
-                  </div>
-                  <div className="bg-cyber-secondary/50 rounded-lg p-2">
-                    <p className="text-cyber-light text-xs">Losses</p>
-                    <p className="text-cyber-accent text-lg font-bold">{model1Stats.losses}</p>
-                  </div>
-                  <div className="bg-cyber-secondary/50 rounded-lg p-2">
-                    <p className="text-cyber-light text-xs">Draws</p>
-                    <p className="text-cyber-accent text-lg font-bold">{model1Stats.draws}</p>
-                  </div>
-                  <div className="bg-cyber-secondary/50 rounded-lg p-2">
-                    <p className="text-cyber-light text-xs">Win Rate</p>
-                    <p className="text-cyber-accent text-lg font-bold">
-                      {model1Stats.wins + model1Stats.losses + model1Stats.draws > 0 
-                        ? `${Math.round((model1Stats.wins / (model1Stats.wins + model1Stats.losses + model1Stats.draws)) * 100)}%`
-                        : '0%'}
-                    </p>
-                  </div>
-                  <div className="bg-cyber-secondary/50 rounded-lg p-2">
-                    <p className="text-cyber-light text-xs">Invalid Moves</p>
-                    <p className="text-cyber-accent text-lg font-bold">{model1Stats.invalidMoves}</p>
-                  </div>
-                  <div className="bg-cyber-secondary/50 rounded-lg p-2">
-                    <p className="text-cyber-light text-xs">Timeouts</p>
-                    <p className="text-cyber-accent text-lg font-bold">{model1Stats.timeouts}</p>
-                  </div>
-                  <div className="bg-cyber-secondary/50 rounded-lg p-2">
-                    <p className="text-cyber-light text-xs">Crashes</p>
-                    <p className="text-cyber-accent text-lg font-bold">{model1Stats.crashes}</p>
-                  </div>
-                  <div className="bg-cyber-secondary/50 rounded-lg p-2">
-                    <p className="text-cyber-light text-xs">Total Moves</p>
-                    <p className="text-cyber-accent text-lg font-bold">{model1Stats.totalMoves}</p>
-                  </div>
-                  <div className="bg-cyber-secondary/50 rounded-lg p-2">
-                    <p className="text-cyber-light text-xs">Total Time</p>
-                    <p className="text-cyber-accent text-lg font-bold">{model1Stats.totalTime.toFixed(0)}ms</p>
-                  </div>
-                  <div className="bg-cyber-secondary/50 rounded-lg p-2">
-                    <p className="text-cyber-light text-xs">Avg. Time</p>
-                    <p className="text-cyber-accent text-lg font-bold">{model1Stats.averageTime.toFixed(0)}ms</p>
-                  </div>
-                </div>
-              </div>
-            )}
+            </div>
           </div>
 
           {/* Game Board - Center */}
@@ -1027,7 +644,7 @@ const Playground = () => {
                       <p className="text-cyber-accent text-lg font-medium font-pixel">
                         {winResult.winner ? (
                           <span>
-                            <span className="text-cyber-accent-2 font-bold">{winResult.winner === 1 ? (model1Name || "Model X") : (model2Name || "Model O")}</span> wins the match!
+                            <span className="text-cyber-accent-2 font-bold">{winResult.winner === 1 ? "You" : (model2Name || "Model O")}</span> wins the match!
                           </span>
                         ) : (
                           "Game ended in a draw!"
@@ -1044,11 +661,11 @@ const Playground = () => {
                       <p className="text-cyber-accent text-lg font-medium font-pixel">
                         {modelThinking ? (
                           <span>
-                            <span className="text-cyber-accent-2 font-bold">{modelThinking === 1 ? (model1Name || "Model X") : (model2Name || "Model O")}</span> is thinking...
+                            <span className="text-cyber-accent-2 font-bold">{modelThinking === 1 ? "You" : (model2Name || "Model O")}</span> is thinking...
                           </span>
                         ) : (
                           <span>
-                            <span className="text-cyber-accent-2 font-bold">{currentPlayer === 1 ? (model1Name || "Model X") : (model2Name || "Model O")}</span>'s turn
+                            <span className="text-cyber-accent-2 font-bold">{currentPlayer === 1 ? "You" : (model2Name || "Model O")}</span>'s turn
                           </span>
                         )}
                       </p>
@@ -1064,7 +681,7 @@ const Playground = () => {
                         Ready to start a new game
                       </p>
                       <p className="text-cyber-light/80 text-sm font-pixel">
-                        <span className="text-cyber-accent-2 font-bold">{model1Name || "Model X"}</span> vs <span className="text-cyber-accent-2 font-bold">{model2Name || "Model O"}</span>
+                        <span className="text-cyber-accent-2 font-bold">You</span> vs <span className="text-cyber-accent-2 font-bold">{model2Name || "Model O"}</span>
                       </p>
                     </div>
                   )}
@@ -1098,12 +715,12 @@ const Playground = () => {
                     <button
                       key={index}
                       onClick={() => handleCellClick(index)}
-                      disabled={!isPlayerTurn || cell !== null}
+                      disabled={!gameInProgress || gameOver || currentPlayer !== 1 || cell !== null}
                       className={`
                         aspect-square bg-cyber-secondary/50 border-2 border-l-cyber-accent/30 border-r-cyber-accent-2/30 rounded-xl 
                         text-4xl font-bold font-pixel flex items-center justify-center 
                         transition-all duration-300 ${getCellColor(cell)}
-                        ${!isPlayerTurn || cell !== null
+                        ${!gameInProgress || gameOver || currentPlayer !== 1 || cell !== null
                           ? 'cursor-not-allowed opacity-50'
                           : 'hover:bg-cyber-secondary hover:border-l-cyber-accent hover:border-r-cyber-accent-2 hover:shadow-cyber-glow transform hover:scale-105'
                         } 
@@ -1267,7 +884,6 @@ const Playground = () => {
                             try {
                               const loadedModel = await loadModelFromFile(file);
                               setModels({
-                                model1: models.model1,
                                 model2: loadedModel
                               });
                               setModel2Input('');

@@ -34,7 +34,7 @@ const modeData = [
 ];
 
 const availableModesMap: Record<string, string[]> = {
-  tictactoe: ['playground'], // Only Model Playground is available for Tic Tac Toe
+  tictactoe: ['playground', 'human'], // Added 'human' mode for Tic Tac Toe
   chess: [],
   'rock-paper-scissors': [],
   checkers: [],
@@ -95,7 +95,13 @@ const GameModes = () => {
                 key={mode.key}
                 className={`relative group rounded-2xl glass-effect-strong border-2 flex flex-col items-center justify-between overflow-hidden transition-all duration-300 hover:shadow-cyber-glow hover:scale-100 z-20 cursor-pointer ${available ? 'border-[#00F2A9]' : 'border-[#FF3CBD] opacity-60'}`}
                 style={{ minHeight: 340 }}
-                onClick={available && gameKey === 'tictactoe' && mode.key === 'playground' ? () => navigate('/games/tictactoe/playground') : undefined}
+                onClick={available && gameKey === 'tictactoe' ? () => {
+                  if (mode.key === 'playground') {
+                    navigate('/games/tictactoe/playground');
+                  } else if (mode.key === 'human') {
+                    navigate('/games/tictactoe/human');
+                  }
+                } : undefined}
               >
                 <div className="flex flex-col items-center w-full p-6">
                   <div className="text-5xl mb-4">{mode.icon}</div>

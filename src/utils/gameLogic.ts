@@ -22,6 +22,7 @@ export interface ModelStats {
   totalMoves: number;
   totalTime: number; // Total time in milliseconds
   averageTime: number; // Average time per move in milliseconds
+  coinFlipsWon: number;
 }
 
 // Initialize an empty board (3x3 grid represented as a 1D array of length 9)
@@ -152,7 +153,7 @@ export const validateModel = async (modelFn: ModelFunction): Promise<ModelValida
 };
 
 // Initialize model statistics
-export const initializeModelStats = (name: string): ModelStats => ({
+export const initializeStats = (name: string): ModelStats => ({
   name,
   wins: 0,
   losses: 0,
@@ -162,7 +163,8 @@ export const initializeModelStats = (name: string): ModelStats => ({
   crashes: 0,
   totalMoves: 0,
   totalTime: 0,
-  averageTime: 0
+  averageTime: 0,
+  coinFlipsWon: 0
 });
 
 // Create a simple synchronous test model

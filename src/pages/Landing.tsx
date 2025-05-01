@@ -20,6 +20,7 @@ const Landing = () => {
   const [vantaEffect, setVantaEffect] = useState<any>(null);
   const vantaRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   useRouteMusic();
 
   // Featured games data
@@ -98,6 +99,7 @@ const Landing = () => {
 
   useEffect(() => {
     if (!vantaEffect && vantaRef.current && window.VANTA) {
+      setIsTransitioning(true);
       setVantaEffect(
         window.VANTA.DOTS({
           el: vantaRef.current,
@@ -116,6 +118,10 @@ const Landing = () => {
           showLines: true
         })
       );
+      // Add a small delay to ensure smooth transition
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 500);
     }
 
     return () => {
@@ -148,26 +154,43 @@ const Landing = () => {
   }, []);
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className={`relative min-h-screen overflow-hidden ${isTransitioning ? 'opacity-0' : 'opacity-100'} transition-opacity duration-500`}>
       {/* Vanta.js Background */}
       <div ref={vantaRef} className="fixed inset-0 w-full h-full -z-10" />
 
       {/* Content Container */}
-      <div className="relative z-10 min-h-screen bg-transparent text-white pt-24">
+      <div className={`relative z-10 min-h-screen bg-transparent text-white pt-24 ${isTransitioning ? 'opacity-0' : 'opacity-100'} transition-opacity duration-500`}>
         {/* Header */}
-        <header ref={headerRef} className="w-full px-6 py-4 flex justify-between items-center glass-effect-strong fixed top-0 left-0 z-50 transition-all duration-300">
+        <header ref={headerRef} className="w-full px-6 py-3 flex justify-between items-center glass-effect-strong fixed top-0 left-0 z-50 transition-all duration-300">
           <div className="flex items-center gap-1">
-            <img src="/logo.png" alt="Model Arena Logo" className="h-12 w-12 align-middle" />
-            <div className="text-2xl font-bold bg-gradient-to-r from-[#FF3CBD] to-[#FF85E1] text-transparent bg-clip-text font-pixel align-middle">
+            <img src="/logo.png" alt="Model Arena Logo" className="h-10 w-10 align-middle" />
+            <div className="text-xl font-bold bg-gradient-to-r from-[#FF3CBD] to-[#FF85E1] text-transparent bg-clip-text font-pixel align-middle">
               Model Arena
             </div>
           </div>
           <nav className="flex gap-8 items-center">
-            {['Home', 'About', 'Games', 'Models'].map((item) => (
-              <a key={item} href="#" className="text-gray-300 hover:text-[#00F2A9] transition-colors">
-                {item}
-              </a>
-            ))}
+            <a 
+              href="/" 
+              className="text-gray-300 hover:text-[#00F2A9] transition-colors"
+              onClick={(e) => {
+                e.preventDefault();
+                window.scrollTo({
+                  top: 0,
+                  behavior: 'smooth'
+                });
+              }}
+            >
+              Home
+            </a>
+            <a href="/about" className="text-gray-300 hover:text-[#00F2A9] transition-colors">
+              About
+            </a>
+            <a href="/games" className="text-gray-300 hover:text-[#00F2A9] transition-colors">
+              Games
+            </a>
+            <a href="#" className="text-gray-300 hover:text-[#00F2A9] transition-colors">
+              Models
+            </a>
             <Button className="glass-button px-6 py-2 text-white font-semibold hover:scale-105 transform transition-all duration-300 border-[#FF3CBD] hover:border-[#00F2A9] bg-gradient-to-r from-[#FF3CBD]/20 to-[#00F2A9]/20 hover:from-[#FF3CBD]/40 hover:to-[#00F2A9]/40 backdrop-blur-sm font-pixel">
               Get Started
             </Button>
@@ -446,7 +469,20 @@ const Landing = () => {
               </div>
               <div className="flex gap-8">
                 {['Home', 'About', 'Games', 'Models'].map((item) => (
-                  <a key={item} href="#" className="text-gray-400 hover:text-[#FF3CBD] transition-colors">
+                  <a 
+                    key={item} 
+                    href={item === 'About' ? '/about' : '#'} 
+                    className="text-gray-400 hover:text-[#FF3CBD] transition-colors"
+                    onClick={(e) => {
+                      if (item === 'Home') {
+                        e.preventDefault();
+                        window.scrollTo({
+                          top: 0,
+                          behavior: 'smooth'
+                        });
+                      }
+                    }}
+                  >
                     {item}
                   </a>
                 ))}

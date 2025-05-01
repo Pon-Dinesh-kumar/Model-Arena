@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
+import { useRouteMusic } from '../presentation/hooks/useRouteMusic';
 
 const gameImages: Record<string, string> = {
   tictactoe: "/games/tictactoe-3d.png",
@@ -44,6 +45,7 @@ const availableModesMap: Record<string, string[]> = {
 const GameModes = () => {
   const navigate = useNavigate();
   const { gameId } = useParams();
+  useRouteMusic();
   const gameKey = (gameId || '').toLowerCase();
   const gameTitle =
     gameKey === 'tictactoe' ? 'Tic Tac Toe' :

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
+import { useRouteMusic } from '../presentation/hooks/useRouteMusic';
 
 const gameData = [
   {
@@ -35,6 +36,7 @@ const gameData = [
 
 const Games = () => {
   const navigate = useNavigate();
+  useRouteMusic();
 
   return (
     <div className="min-h-screen bg-cyber-dark bg-cyber-gradient relative overflow-hidden">

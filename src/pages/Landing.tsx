@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
+import { useRouteMusic } from '../presentation/hooks/useRouteMusic';
 
 // Declare the global VANTA object
 declare global {
@@ -19,6 +20,7 @@ const Landing = () => {
   const [vantaEffect, setVantaEffect] = useState<any>(null);
   const vantaRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
+  useRouteMusic();
 
   // Featured games data
   const gameModesList = [

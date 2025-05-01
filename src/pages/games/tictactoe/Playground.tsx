@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/components/ui/use-toast";
 import { playSound } from "@/utils/sounds";
 import { updateStatsWithMove } from "@/utils/statsManager";
+import { useRouteMusic } from '../../../presentation/hooks/useRouteMusic';
 
 import TicTacToeBoard from "@/components/TicTacToeBoard";
 import ModelStats from "@/components/ModelStats";
@@ -46,6 +47,7 @@ interface GameState {
 const Playground = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  useRouteMusic();
   
   // Game state
   const [board, setBoard] = useState<BoardState>(initializeBoard());

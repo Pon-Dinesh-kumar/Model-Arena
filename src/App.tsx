@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Landing from './pages/Landing';
 import Games from './pages/Games';
 import GameModes from './pages/GameModes';
+<<<<<<< Updated upstream
 import Playground from './pages/games/tictactoe/Playground';
 import HumanVsModel from './pages/games/tictactoe/HumanVsModel';
 import About from './pages/About';
@@ -28,6 +29,26 @@ const App = () => {
         </Router>
       </div>
     </MusicProvider>
+=======
+import TicTacToePlayground from './pages/games/tictactoe/Playground';
+import TicTacToeHumanVsModel from './pages/games/tictactoe/HumanVsModel';
+import RPSPlayground from './pages/games/rock-paper-scissors/Playground';
+import RPSHumanVsModel from './pages/games/rock-paper-scissors/HumanVsModel';
+
+const App = () => {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/games" element={<Games />} />
+        <Route path="/games/:gameId" element={<GameModes />} />
+        <Route path="/games/tictactoe/playground" element={<TicTacToePlayground />} />
+        <Route path="/games/tictactoe/human" element={<TicTacToeHumanVsModel />} />
+        <Route path="/games/rock-paper-scissors/playground" element={<RPSPlayground />} />
+        <Route path="/games/rock-paper-scissors/human" element={<RPSHumanVsModel />} />
+      </Routes>
+    </Router>
+>>>>>>> Stashed changes
   );
 };
 

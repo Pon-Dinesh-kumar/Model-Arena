@@ -8,7 +8,10 @@ export type GameResult = {
   winningCells?: number[]; // Indices of winning cells for highlighting
 };
 
-export type ModelFunction = (board: BoardState) => Promise<BoardState>;
+export type BoardModelFunction = (state: BoardState | null) => Promise<BoardState>;
+export type RPSModelFunction = (state: RPSGameState | null) => Promise<RPSChoice>;
+export type ModelFunction = BoardModelFunction | RPSModelFunction;
+
 export type ModelValidationResult = { valid: boolean; error?: string };
 
 export interface ModelStats {
@@ -98,59 +101,134 @@ export const validateMove = (oldBoard: BoardState, newBoard: BoardState, playerN
   return isValid;
 };
 
-// Validate a model function before the game starts
-export const validateModel = async (modelFn: ModelFunction): Promise<ModelValidationResult> => {
-  console.log('[DEBUG] Starting model validation...');
-  
-  try {
-    // Check if modelFn is actually a function
-    if (typeof modelFn !== 'function') {
-      console.log('[DEBUG] Validation failed: modelFn is not a function');
-      return { valid: false, error: 'Model must be a function' };
-    }
-
-    // Test case 1: Empty board
-    const emptyBoard = initializeBoard();
-    console.log('[DEBUG] Testing model with empty board:', JSON.stringify(emptyBoard));
-    
-    let result = await Promise.race([
-      modelFn(emptyBoard),
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000))
-    ]);
-    
-    if (result === null) {
-      console.log('[DEBUG] Validation failed: Model timed out with empty board');
-      return { valid: false, error: 'Model timed out (2s) during validation' };
-    }
-    
-    console.log('[DEBUG] Model response to empty board:', JSON.stringify(result));
-
-    // Test case 2: Board with one move
-    const boardWithOneMove = [...emptyBoard];
-    boardWithOneMove[0] = 2; // Opponent's move
-    console.log('[DEBUG] Testing model with board containing one move:', JSON.stringify(boardWithOneMove));
-    
-    result = await Promise.race([
-      modelFn(boardWithOneMove),
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000))
-    ]);
-    
-    if (result === null) {
-      console.log('[DEBUG] Validation failed: Model timed out with board containing one move');
-      return { valid: false, error: 'Model timed out (2s) during validation' };
-    }
-    
-    console.log('[DEBUG] Model response to board with one move:', JSON.stringify(result));
-    
-    // More comprehensive validation can be added if needed
-    console.log('[DEBUG] Model validation successful');
-    return { valid: true };
-  } catch (error) {
-    console.error('[ERROR] Model validation error:', error);
-    console.error('[ERROR] Model validation error stack:', error.stack);
-    return { valid: false, error: `Model validation error: ${error}` };
-  }
+export const isRPSModel = (model: ModelFunction): model is RPSModelFunction => {
+  return model.name.includes('RPS') || model.toString().includes('RPSChoice');
 };
+
+export const isBoardModel = (model: ModelFunction): model is BoardModelFunction => {
+  return !isRPSModel(model);
+};
+
+// Validate a model function before the game starts
+export async function validateModel(model: RPSModelFunction | BoardModelFunction): Promise<{ valid: boolean; error?: string }> {
+  try {
+    console.log('[DEBUG] Starting model validation');
+    
+    // Type check
+    if (typeof model !== 'function') {
+      return { 
+        valid: false, 
+        error: `Model must be a function, got ${typeof model}` 
+      };
+    }
+
+    // Test cases for RPS model
+    if (isRPSModel(model)) {
+      console.log('[DEBUG] Validating RPS model');
+      
+      // Test null state
+      const nullResult = await model(null);
+      if (!validateRPSChoice(nullResult)) {
+        return { 
+          valid: false, 
+          error: `Invalid response for null state: ${nullResult}` 
+        };
+      }
+
+      // Test empty game state
+      const emptyState = initializeRPSGame();
+      const emptyResult = await model(emptyState);
+      if (!validateRPSChoice(emptyResult)) {
+        return { 
+          valid: false, 
+          error: `Invalid response for empty state: ${emptyResult}` 
+        };
+      }
+
+      // Test game state with moves
+      const gameState = {
+        ...emptyState,
+        player1Choice: 'rock' as RPSChoice,
+        round: 2
+      };
+      const gameResult = await model(gameState);
+      if (!validateRPSChoice(gameResult)) {
+        return { 
+          valid: false, 
+          error: `Invalid response for game state: ${gameResult}` 
+        };
+      }
+
+      // Test response time
+      const startTime = performance.now();
+      await model(null);
+      const duration = performance.now() - startTime;
+      if (duration > 5000) {
+        return { 
+          valid: false, 
+          error: `Model response too slow: ${duration}ms` 
+        };
+      }
+
+      console.log('[DEBUG] RPS model validation successful');
+      return { valid: true };
+    }
+    
+    // Test cases for Board model
+    if (isBoardModel(model)) {
+      console.log('[DEBUG] Validating Board model');
+      
+      // Test null state
+      const nullResult = await model(null);
+      if (!Array.isArray(nullResult) || nullResult.length !== 9) {
+        return { 
+          valid: false, 
+          error: 'Invalid board response for null state' 
+        };
+      }
+
+      // Test empty board
+      const emptyBoard = initializeBoard();
+      const emptyResult = await model(emptyBoard);
+      if (!Array.isArray(emptyResult) || emptyResult.length !== 9) {
+        return { 
+          valid: false, 
+          error: 'Invalid board response for empty board' 
+        };
+      }
+
+      // Test response time
+      const startTime = performance.now();
+      await model(emptyBoard);
+      const duration = performance.now() - startTime;
+      if (duration > 5000) {
+        return { 
+          valid: false, 
+          error: `Model response too slow: ${duration}ms` 
+        };
+      }
+
+      console.log('[DEBUG] Board model validation successful');
+      return { valid: true };
+    }
+
+    return { 
+      valid: false, 
+      error: 'Unknown model type' 
+    };
+    
+  } catch (error) {
+    console.error('[ERROR] Model validation failed:', {
+      error: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
+    return { 
+      valid: false, 
+      error: `Validation error: ${error.message}` 
+    };
+  }
+}
 
 // Initialize model statistics
 export const initializeStats = (name: string): ModelStats => ({
@@ -275,4 +353,146 @@ export const createDemoModel = (name: string, preference: 'center' | 'corners' |
   
   console.log(`[DEBUG] Successfully created demo model for ${name} (Player ${playerNumber})`);
   return modelFunction;
+};
+
+// Rock Paper Scissors Types
+export type RPSChoice = 'rock' | 'paper' | 'scissors';
+export type RPSResult = 'win' | 'lose' | 'draw';
+export type RPSDemoStrategy = 'random' | 'pattern' | 'counter' | 'adaptive';
+
+export interface RPSGameState {
+  player1Choice: RPSChoice | null;
+  player2Choice: RPSChoice | null;
+  result: RPSResult | null;
+  player1Score: number;
+  player2Score: number;
+  round: number;
+}
+
+// Rock Paper Scissors Functions
+export const initializeRPSGame = (): RPSGameState => ({
+  player1Choice: null,
+  player2Choice: null,
+  result: null,
+  player1Score: 0,
+  player2Score: 0,
+  round: 1
+});
+
+// Add stronger type guard for RPSChoice
+export const isRPSChoice = (value: any): value is RPSChoice => {
+  return typeof value === 'string' && ['rock', 'paper', 'scissors'].includes(value);
+};
+
+export const validateRPSChoice = (choice: any): choice is RPSChoice => {
+  return isRPSChoice(choice);
+};
+
+export const determineRPSWinner = (choice1: RPSChoice, choice2: RPSChoice): RPSResult => {
+  if (choice1 === choice2) return 'draw';
+  
+  const winningCombinations: Record<RPSChoice, RPSChoice> = {
+    rock: 'scissors',
+    paper: 'rock',
+    scissors: 'paper'
+  };
+
+  return winningCombinations[choice1] === choice2 ? 'win' : 'lose';
+};
+
+// Helper function to get the counter move
+const getCounterMove = (lastOpponentMove: RPSChoice): RPSChoice => {
+  const counterMoves: Record<RPSChoice, RPSChoice> = {
+    rock: 'paper',
+    paper: 'scissors',
+    scissors: 'rock'
+  };
+  return counterMoves[lastOpponentMove];
+};
+
+// Helper function to get a random move
+const getRandomMove = (): RPSChoice => {
+  const choices: RPSChoice[] = ['rock', 'paper', 'scissors'];
+  return choices[Math.floor(Math.random() * choices.length)];
+};
+
+export const createRPSDemoModel = (
+  name: string,
+  strategy: RPSDemoStrategy,
+  playerNumber: 1 | 2
+): RPSModelFunction => {
+  console.log(`[DEBUG] Creating demo model for ${name} (Player ${playerNumber}) with strategy: ${strategy}`);
+  
+  let lastOpponentMove: RPSChoice | null = null;
+  let moveHistory: RPSChoice[] = [];
+  
+  const modelFn = async (gameState: RPSGameState | null): Promise<RPSChoice> => {
+    console.log(`[DEBUG] Demo model called with state:`, gameState);
+    
+    try {
+      // Add artificial delay to simulate thinking (100-500ms)
+      const delay = Math.floor(Math.random() * 400) + 100;
+      await new Promise(resolve => setTimeout(resolve, delay));
+      
+      // Update move history if we have a valid game state
+      if (gameState) {
+        const opponentMove = playerNumber === 1 ? gameState.player2Choice : gameState.player1Choice;
+        if (opponentMove) {
+          lastOpponentMove = opponentMove;
+          moveHistory.push(opponentMove);
+        }
+      }
+      
+      let move: RPSChoice;
+      
+      switch (strategy) {
+        case 'random':
+          move = getRandomMove();
+          break;
+          
+        case 'pattern':
+          // Cycle through moves in a fixed pattern
+          const patternMoves: RPSChoice[] = ['rock', 'paper', 'scissors'];
+          const nextIndex = moveHistory.length % patternMoves.length;
+          move = patternMoves[nextIndex];
+          break;
+          
+        case 'counter':
+          // Counter the opponent's last move if available, otherwise random
+          move = lastOpponentMove ? getCounterMove(lastOpponentMove) : getRandomMove();
+          break;
+          
+        case 'adaptive':
+          // Use a mix of counter and random strategies
+          if (lastOpponentMove && Math.random() > 0.3) {
+            move = getCounterMove(lastOpponentMove);
+          } else {
+            move = getRandomMove();
+          }
+          break;
+          
+        default:
+          console.warn(`[DEBUG] Unknown strategy ${strategy}, falling back to random`);
+          move = getRandomMove();
+      }
+      
+      console.log(`[DEBUG] Demo model selected move:`, move);
+      return move;
+      
+    } catch (error) {
+      console.error(`[DEBUG] Error in demo model:`, error);
+      // In case of error, return a random move as fallback
+      return getRandomMove();
+    }
+  };
+  
+  // Add metadata to the function for type checking
+  Object.defineProperty(modelFn, 'name', { value: `RPS_${name}_${strategy}` });
+  
+  // Test the model immediately to ensure it works
+  modelFn(null).catch(error => {
+    console.error(`[DEBUG] Initial model test failed:`, error);
+  });
+  
+  return modelFn;
 };

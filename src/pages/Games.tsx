@@ -12,18 +12,18 @@ const gameData = [
     path: "/games/tictactoe"
   },
   {
+    title: "Rock Paper Scissors",
+    description: "Test your model's quick decision making.",
+    image: "/games/rps.png",
+    available: true,
+    path: "/games/rock-paper-scissors"
+  },
+  {
     title: "Chess",
     description: "Strategic battle of wits between AI models.",
     image: "/games/chess.png",
     available: false,
     path: "/games/chess"
-  },
-  {
-    title: "Rock Paper Scissors",
-    description: "Test your model's quick decision making.",
-    image: "/games/rps.png",
-    available: false,
-    path: "/games/rps"
   },
   {
     title: "Checkers",

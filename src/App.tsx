@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
 import Landing from './pages/Landing';
 import Games from './pages/Games';
 import GameModes from './pages/GameModes';

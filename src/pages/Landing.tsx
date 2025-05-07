@@ -39,7 +39,7 @@ const Landing = () => {
     {
       title: "Rock Paper Scissors",
       image: "/games/rps.png",
-      availableModes: [],
+      availableModes: ['playground', 'hvm', 'tournament'],
     },
     {
       title: "Chess",
@@ -280,7 +280,10 @@ const Landing = () => {
                   <span className="text-[#FF3CBD]">Top Games</span>
                   <span className="text-[#00F2A9]"> Collection</span>
                 </h2>
-                <Button className="glass-button hover:scale-105 transform transition-all duration-300 border-[#FF3CBD] hover:border-[#00F2A9] bg-gradient-to-r from-[#FF3CBD]/20 to-[#00F2A9]/20 hover:from-[#FF3CBD]/40 hover:to-[#00F2A9]/40 backdrop-blur-sm font-pixel">
+                <Button 
+                  onClick={() => navigate('/games')}
+                  className="glass-button hover:scale-105 transform transition-all duration-300 border-[#FF3CBD] hover:border-[#00F2A9] bg-gradient-to-r from-[#FF3CBD]/20 to-[#00F2A9]/20 hover:from-[#FF3CBD]/40 hover:to-[#00F2A9]/40 backdrop-blur-sm font-pixel"
+                >
                   Show All
                 </Button>
               </div>
@@ -294,24 +297,27 @@ const Landing = () => {
                   >
                     <div className="relative mb-4">
                       <img 
-                        src={game.title === 'Tic Tac Toe' ? '/games/tictactoe-3d.png' : game.image} 
+                        src={game.image} 
                         alt={game.title} 
-                        className={`w-full h-48 object-cover rounded-lg ${game.title !== 'Tic Tac Toe' ? 'filter blur-sm brightness-75' : ''}`} 
+                        className={`w-full h-48 object-cover rounded-lg ${game.title !== 'Tic Tac Toe' && game.title !== 'Rock Paper Scissors' ? 'filter blur-sm brightness-75' : ''}`} 
                       />
-                      {game.title !== 'Tic Tac Toe' && (
+                      {game.title !== 'Tic Tac Toe' && game.title !== 'Rock Paper Scissors' && (
                         <div className="absolute inset-0 flex items-center justify-center">
                           <span className="bg-[#13002A]/80 text-white text-lg font-bold px-4 py-2 rounded-full border-2 border-[#FF3CBD] shadow-lg">Coming Soon</span>
                         </div>
                       )}
-                      {hoverCard === index && game.title === 'Tic Tac Toe' && (
+                      {hoverCard === index && (game.title === 'Tic Tac Toe' || game.title === 'Rock Paper Scissors') && (
                         <div className="absolute inset-0 glass-effect-strong flex items-end justify-center p-4 rounded-lg">
-                          <Button className="glass-button w-full hover:scale-105 transform transition-all duration-300 border-[#FF3CBD] hover:border-[#00F2A9] bg-gradient-to-r from-[#FF3CBD]/20 to-[#00F2A9]/20 hover:from-[#FF3CBD]/40 hover:to-[#00F2A9]/40 backdrop-blur-sm font-pixel">
+                          <Button 
+                            onClick={() => navigate(game.title === 'Tic Tac Toe' ? '/games/tictactoe' : '/games/rock-paper-scissors')}
+                            className="glass-button w-full hover:scale-105 transform transition-all duration-300 border-[#FF3CBD] hover:border-[#00F2A9] bg-gradient-to-r from-[#FF3CBD]/20 to-[#00F2A9]/20 hover:from-[#FF3CBD]/40 hover:to-[#00F2A9]/40 backdrop-blur-sm font-pixel"
+                          >
                             Play Now
                           </Button>
                         </div>
                       )}
                     </div>
-                    <h3 className={`text-xl font-bold mb-4 ${game.title !== 'Tic Tac Toe' ? 'filter blur-sm text-gray-400' : ''}`}>{game.title}</h3>
+                    <h3 className={`text-xl font-bold mb-4 ${game.title !== 'Tic Tac Toe' && game.title !== 'Rock Paper Scissors' ? 'filter blur-sm text-gray-400' : ''}`}>{game.title}</h3>
                     <div className="flex justify-center gap-4 mb-2">
                       {gameModesList.map((mode) => (
                         <span

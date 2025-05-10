@@ -27,7 +27,9 @@ import {
   ModelStats as ModelStatsType,
   initializeStats,
   createDemoModel,
-  GameResult
+  GameResult,
+  isBoardModel,
+  BoardModelFunction
 } from "@/utils/gameLogic";
 
 import { 
@@ -165,31 +167,32 @@ const Playground = () => {
     });
   }, [toast]);
   
+  // Add useEffect to initialize models on mount
+  useEffect(() => {
+    (async () => {
+      await initializeModels();
+    })();
+  }, []);
+  
   // Handle coin flip animation and result
-  const performCoinFlip = () => {
+  const performCoinFlip = async () => {
     console.log('[DEBUG] Starting coin flip...');
     playSound('coinFlip');
-    
     setShowCoinFlip(true);
     setFlippedResult(null);
-    
     // After animation, set the result
     setTimeout(() => {
       const result = Math.random() < 0.5 ? 1 : 2;
       console.log(`[DEBUG] Coin flip result: Player ${result}`);
-      
       setFlippedResult(result);
       setCurrentPlayer(result);
       setStatusMessage(`${result === 1 ? model1Name : model2Name} goes first`);
-      
       // Hide coin after showing result
       setTimeout(() => {
         setShowCoinFlip(false);
         // Start game after coin flip animation
         setTimeout(() => {
           console.log('[DEBUG] Starting first move...');
-          
-          // Verify models are still valid
           const currentModel = result === 1 ? models.model1 : models.model2;
           if (typeof currentModel !== 'function') {
             console.error('[ERROR] Model not valid before first move:');
@@ -198,11 +201,8 @@ const Playground = () => {
             playSound('error');
             return;
           }
-          
-          // Ensure we have a valid board state
           const currentBoard = [...board];
           console.log(`[DEBUG] Starting first move with board:`, JSON.stringify(currentBoard));
-          
           makeModelMove(result);
         }, 500);
       }, 1500);
@@ -218,8 +218,8 @@ const Playground = () => {
       gameState: gameState
     });
     
-    let model1Function: ModelFunction | null = null;
-    let model2Function: ModelFunction | null = null;
+    let model1Function: BoardModelFunction | null = null;
+    let model2Function: BoardModelFunction | null = null;
     
     setModel1ValidationError(null);
     setModel2ValidationError(null);
@@ -228,33 +228,33 @@ const Playground = () => {
     try {
       console.log(`[DEBUG] Initializing Model 1 (${model1Name}) with type: ${model1Type}`);
       if (model1Type === "demo") {
-        try {
-          model1Function = createDemoModel(model1Name, model1Demo, 1);
-          console.log('[DEBUG] Model 1 function created:', typeof model1Function);
-          
-          // Verify the function was created properly
-          if (typeof model1Function !== 'function') {
-            throw new Error('Model 1 function was not created properly');
-          }
-          
-          // Validate the model
-          console.log('[DEBUG] Validating Model 1...');
-          const validationResult = await validateModel(model1Function);
-          if (!validationResult.valid) {
-            console.error('[ERROR] Model 1 validation failed:', validationResult.error);
-            setModel1ValidationError(validationResult.error || 'Validation failed');
-            return false;
-          }
-          console.log('[DEBUG] Model 1 validation successful');
-        } catch (error) {
-          console.error('[ERROR] Failed to create Model 1:', error);
-          setModel1ValidationError(`Error creating model: ${error}`);
+        const fn = createDemoModel(model1Name, model1Demo, 1);
+        if (isBoardModel(fn)) {
+          model1Function = fn;
+        } else {
+          setModel1ValidationError("Model 1 is not a valid TicTacToe model");
+          return false;
+        }
+        const validationResult = await validateModel(model1Function);
+        if (!validationResult.valid) {
+          setModel1ValidationError(validationResult.error || 'Validation failed');
           return false;
         }
       } else if (model1Type === "function" && model1Input.trim()) {
-        model1Function = parseModelFunction(model1Input);
+        const fn = parseModelFunction(model1Input);
+        if (isBoardModel(fn)) {
+          model1Function = fn;
+        } else {
+          setModel1ValidationError("Model 1 is not a valid TicTacToe model");
+          return false;
+        }
       } else if (model1Type === "url" && model1Input.trim()) {
-        model1Function = randomModel;
+        if (isBoardModel(randomModel)) {
+          model1Function = randomModel;
+        } else {
+          setModel1ValidationError("Random model is not a valid TicTacToe model");
+          return false;
+        }
       } else if (model1Type === "file") {
         model1Function = null;
         setModel1Input('');
@@ -270,33 +270,33 @@ const Playground = () => {
     try {
       console.log(`[DEBUG] Initializing Model 2 (${model2Name}) with type: ${model2Type}`);
       if (model2Type === "demo") {
-        try {
-          model2Function = createDemoModel(model2Name, model2Demo, 2);
-          console.log('[DEBUG] Model 2 function created:', typeof model2Function);
-          
-          // Verify the function was created properly
-          if (typeof model2Function !== 'function') {
-            throw new Error('Model 2 function was not created properly');
-          }
-          
-          // Validate the model
-          console.log('[DEBUG] Validating Model 2...');
-          const validationResult = await validateModel(model2Function);
-          if (!validationResult.valid) {
-            console.error('[ERROR] Model 2 validation failed:', validationResult.error);
-            setModel2ValidationError(validationResult.error || 'Validation failed');
-            return false;
-          }
-          console.log('[DEBUG] Model 2 validation successful');
-        } catch (error) {
-          console.error('[ERROR] Failed to create Model 2:', error);
-          setModel2ValidationError(`Error creating model: ${error}`);
+        const fn = createDemoModel(model2Name, model2Demo, 2);
+        if (isBoardModel(fn)) {
+          model2Function = fn;
+        } else {
+          setModel2ValidationError("Model 2 is not a valid TicTacToe model");
+          return false;
+        }
+        const validationResult = await validateModel(model2Function);
+        if (!validationResult.valid) {
+          setModel2ValidationError(validationResult.error || 'Validation failed');
           return false;
         }
       } else if (model2Type === "function" && model2Input.trim()) {
-        model2Function = parseModelFunction(model2Input);
+        const fn = parseModelFunction(model2Input);
+        if (isBoardModel(fn)) {
+          model2Function = fn;
+        } else {
+          setModel2ValidationError("Model 2 is not a valid TicTacToe model");
+          return false;
+        }
       } else if (model2Type === "url" && model2Input.trim()) {
-        model2Function = randomModel;
+        if (isBoardModel(randomModel)) {
+          model2Function = randomModel;
+        } else {
+          setModel2ValidationError("Random model is not a valid TicTacToe model");
+          return false;
+        }
       } else if (model2Type === "file") {
         model2Function = null;
         setModel2Input('');
@@ -360,10 +360,11 @@ const Playground = () => {
     
     // Get the current model and verify it's a function
     const currentModel = player === 1 ? models.model1 : models.model2;
-    if (typeof currentModel !== 'function') {
-      console.error(`[ERROR] Model ${player} is not a function:`, currentModel);
+    if (!isBoardModel(currentModel)) {
       setGameInProgress(false);
-      setStatusMessage(`Error: ${player === 1 ? model1Name : model2Name} is not properly initialized`);
+      setStatusMessage(`Error: ${player === 1 ? model1Name : model2Name} is not a valid TicTacToe model`);
+      setModelThinking(null);
+      playSound('error');
       return;
     }
     
@@ -408,6 +409,28 @@ const Playground = () => {
       console.log(`[DEBUG] Calling model ${player} with board:`, JSON.stringify(currentBoard));
       const newBoard = await currentModel(currentBoard);
       console.log(`[DEBUG] Model ${player} returned board:`, JSON.stringify(newBoard));
+      
+      // Validate the returned board
+      if (!Array.isArray(newBoard) || newBoard.length !== 9) {
+        // Invalid move: model returned wrong type
+        setPlayerStats({
+          ...playerStats,
+          invalidMoves: playerStats.invalidMoves + 1
+        });
+        const opponent = player === 1 ? 2 : 1;
+        setWinResult({
+          winner: opponent,
+          winningCells: []
+        });
+        setGameOver(true);
+        setGameInProgress(false);
+        setModelThinking(null);
+        playSound('error');
+        setStatusMessage(`${player === 1 ? model1Name : model2Name} made an invalid move (bad return type)! ${player === 1 ? model2Name : model1Name} wins.`);
+        window.clearTimeout(timeoutId);
+        moveTimeoutRef.current = null;
+        return;
+      }
       
       // Calculate move time
       const moveTime = performance.now() - startTime;
@@ -577,68 +600,19 @@ const Playground = () => {
   };
   
   // Start new game
-  const startGame = async () => {
+  const startGame = () => {
     playSound('click');
-    console.log('[DEBUG] Starting new game...');
-    
     // Reset game state
     const initialBoard = initializeBoard();
-    console.log('[DEBUG] Initialized board:', JSON.stringify(initialBoard));
-    
-    // Initialize models first
-    const modelsReady = await initializeModels();
-    
-    if (!modelsReady) {
-      console.log('[DEBUG] Model initialization failed');
-      setStatusMessage("Failed to initialize models. Check for errors.");
-      return;
-    }
-    
-    // Verify models are set
-    if (!models.model1 || !models.model2) {
-      console.error('[ERROR] Models not properly initialized');
-      console.error('[ERROR] Model state:', {
-        model1: !!models.model1,
-        model2: !!models.model2
-      });
-      setStatusMessage("Error: Models not properly initialized");
-      return;
-    }
-    
-    // Set all game state at once to prevent race conditions
-    console.log('[DEBUG] Setting initial game state...');
     setBoard(initialBoard);
     setGameOver(false);
     setWinResult({ winner: null });
     setGameInProgress(true);
-    setCurrentPlayer(1); // Reset current player
+    setCurrentPlayer(1);
     setCurrentMatch(0);
     setIsReplaying(true);
     setStatusMessage(`Starting match 1 of ${matchCount}...`);
-    
-    // Force a state update to ensure game state is set
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
-    console.log('[DEBUG] Game state after initialization:', {
-      inProgress: gameStateRef.current.inProgress,
-      over: gameStateRef.current.over,
-      board: board,
-      model1: !!models.model1,
-      model2: !!models.model2
-    });
-    
-    // Verify game state is correct
-    if (!gameStateRef.current.inProgress || gameStateRef.current.over) {
-      console.error('[ERROR] Game state not properly set after initialization');
-      console.error('[ERROR] Game state:', {
-        inProgress: gameStateRef.current.inProgress,
-        over: gameStateRef.current.over
-      });
-      setStatusMessage("Error: Game state not properly initialized");
-      return;
-    }
-    
-    // Start with coin flip animation
+    // Start coin flip immediately
     setStatusMessage("Flipping coin to determine who goes first...");
     performCoinFlip();
   };
@@ -660,19 +634,6 @@ const Playground = () => {
     setWinResult({ winner: null });
     setModelThinking(null);
     setStatusMessage("Ready for a new game");
-  };
-
-  const handleStartGame = async () => {
-    setIsLoading(true);
-    try {
-      setGameInProgress(true);
-      setGameOver(false);
-      setGameState('Game Started');
-      setIsLoading(false);
-    } catch (error) {
-      console.error('Error starting game:', error);
-      setIsLoading(false);
-    }
   };
 
   const handleCellClick = (index: number) => {
@@ -889,10 +850,15 @@ const Playground = () => {
                           onFileSelect={async (file) => {
                             try {
                               const loadedModel = await loadModelFromFile(file);
-                              setModels({
-                                model1: loadedModel,
-                                model2: models.model2
-                              });
+                              if (isBoardModel(loadedModel)) {
+                                setModels({
+                                  model1: loadedModel,
+                                  model2: models.model2
+                                });
+                              } else {
+                                console.error("Loaded model is not a valid TicTacToe model");
+                                setModel1ValidationError("Loaded model is not a valid TicTacToe model");
+                              }
                               setModel1Input('');
                               toast({
                                 title: "Model loaded successfully",
@@ -1268,10 +1234,15 @@ const Playground = () => {
                           onFileSelect={async (file) => {
                             try {
                               const loadedModel = await loadModelFromFile(file);
-                              setModels({
-                                model1: models.model1,
-                                model2: loadedModel
-                              });
+                              if (isBoardModel(loadedModel)) {
+                                setModels({
+                                  model1: models.model1,
+                                  model2: loadedModel
+                                });
+                              } else {
+                                console.error("Loaded model is not a valid TicTacToe model");
+                                setModel2ValidationError("Loaded model is not a valid TicTacToe model");
+                              }
                               setModel2Input('');
                               toast({
                                 title: "Model loaded successfully",

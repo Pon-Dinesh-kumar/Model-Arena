@@ -27,7 +27,9 @@ import {
   ModelStats as ModelStatsType,
   initializeStats,
   createDemoModel,
-  GameResult
+  GameResult,
+  isBoardModel,
+  BoardModelFunction
 } from "@/utils/gameLogic";
 
 import { 
@@ -159,6 +161,13 @@ const Playground = () => {
     });
   }, [toast]);
   
+  // Update useEffect for model initialization
+  useEffect(() => {
+    (async () => {
+      await initializeModels();
+    })();
+  }, [model2Type, model2Demo, model2Input, model2Name]);
+  
   // Handle coin flip animation and result
   const performCoinFlip = () => {
     console.log('[DEBUG] Starting coin flip...');
@@ -212,7 +221,7 @@ const Playground = () => {
       gameState: gameState
     });
     
-    let model2Function: ModelFunction | null = null;
+    let model2Function: BoardModelFunction | null = null;
     
     setModel2ValidationError(null);
     
@@ -220,33 +229,33 @@ const Playground = () => {
     try {
       console.log(`[DEBUG] Initializing Model 2 (${model2Name}) with type: ${model2Type}`);
       if (model2Type === "demo") {
-        try {
-          model2Function = createDemoModel(model2Name, model2Demo, 2);
-          console.log('[DEBUG] Model 2 function created:', typeof model2Function);
-          
-          // Verify the function was created properly
-          if (typeof model2Function !== 'function') {
-            throw new Error('Model 2 function was not created properly');
-          }
-          
-          // Validate the model
-          console.log('[DEBUG] Validating Model 2...');
-          const validationResult = await validateModel(model2Function);
-          if (!validationResult.valid) {
-            console.error('[ERROR] Model 2 validation failed:', validationResult.error);
-            setModel2ValidationError(validationResult.error || 'Validation failed');
-            return false;
-          }
-          console.log('[DEBUG] Model 2 validation successful');
-        } catch (error) {
-          console.error('[ERROR] Failed to create Model 2:', error);
-          setModel2ValidationError(`Error creating model: ${error}`);
+        const fn = createDemoModel(model2Name, model2Demo, 2);
+        if (isBoardModel(fn)) {
+          model2Function = fn;
+        } else {
+          setModel2ValidationError("Model is not a valid TicTacToe model");
+          return false;
+        }
+        const validationResult = await validateModel(model2Function);
+        if (!validationResult.valid) {
+          setModel2ValidationError(validationResult.error || 'Validation failed');
           return false;
         }
       } else if (model2Type === "function" && model2Input.trim()) {
-        model2Function = parseModelFunction(model2Input);
+        const fn = parseModelFunction(model2Input);
+        if (isBoardModel(fn)) {
+          model2Function = fn;
+        } else {
+          setModel2ValidationError("Model is not a valid TicTacToe model");
+          return false;
+        }
       } else if (model2Type === "url" && model2Input.trim()) {
-        model2Function = randomModel;
+        if (isBoardModel(randomModel)) {
+          model2Function = randomModel;
+        } else {
+          setModel2ValidationError("Random model is not a valid TicTacToe model");
+          return false;
+        }
       } else if (model2Type === "file") {
         model2Function = null;
         setModel2Input('');
@@ -296,8 +305,8 @@ const Playground = () => {
     setModelThinking(2);
     setStatusMessage(`${model2Name || 'Model O'} is thinking...`);
     const model = models.model2;
-    if (typeof model !== 'function') {
-      setStatusMessage('Model O is not properly initialized');
+    if (!isBoardModel(model)) {
+      setStatusMessage('Model O is not a valid TicTacToe model');
       setGameInProgress(false);
       setGameOver(true);
       setModelThinking(null);
@@ -306,6 +315,13 @@ const Playground = () => {
     // Simulate AI thinking
     await new Promise(resolve => setTimeout(resolve, 1000));
     const newBoard = await model([...board]);
+    if (!Array.isArray(newBoard) || newBoard.length !== 9) {
+      setStatusMessage('Model O returned an invalid board');
+      setGameInProgress(false);
+      setGameOver(true);
+      setModelThinking(null);
+      return;
+    }
     setModelThinking(null);
     setBoard(newBoard);
     setModel2Stats(prev => ({ ...prev, totalMoves: prev.totalMoves + 1 }));
@@ -336,66 +352,19 @@ const Playground = () => {
   };
   
   // Start new game
-  const startGame = async () => {
+  const startGame = () => {
     playSound('click');
-    console.log('[DEBUG] Starting new game...');
-    
     // Reset game state
     const initialBoard = initializeBoard();
-    console.log('[DEBUG] Initialized board:', JSON.stringify(initialBoard));
-    
-    // Initialize models first
-    const modelsReady = await initializeModels();
-    
-    if (!modelsReady) {
-      console.log('[DEBUG] Model initialization failed');
-      setStatusMessage("Failed to initialize models. Check for errors.");
-      return;
-    }
-    
-    // Verify models are set
-    if (!models.model2) {
-      console.error('[ERROR] Models not properly initialized');
-      console.error('[ERROR] Model state:', {
-        model2: !!models.model2
-      });
-      setStatusMessage("Error: Models not properly initialized");
-      return;
-    }
-    
-    // Set all game state at once to prevent race conditions
-    console.log('[DEBUG] Setting initial game state...');
     setBoard(initialBoard);
     setGameOver(false);
     setWinResult({ winner: null });
     setGameInProgress(true);
-    setCurrentPlayer(1); // Reset current player
+    setCurrentPlayer(1);
     setCurrentMatch(0);
     setIsReplaying(true);
     setStatusMessage(`Starting match 1 of ${matchCount}...`);
-    
-    // Force a state update to ensure game state is set
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
-    console.log('[DEBUG] Game state after initialization:', {
-      inProgress: gameStateRef.current.inProgress,
-      over: gameStateRef.current.over,
-      board: board,
-      model2: !!models.model2
-    });
-    
-    // Verify game state is correct
-    if (!gameStateRef.current.inProgress || gameStateRef.current.over) {
-      console.error('[ERROR] Game state not properly set after initialization');
-      console.error('[ERROR] Game state:', {
-        inProgress: gameStateRef.current.inProgress,
-        over: gameStateRef.current.over
-      });
-      setStatusMessage("Error: Game state not properly initialized");
-      return;
-    }
-    
-    // Start with coin flip animation
+    // Start coin flip immediately
     setStatusMessage("Flipping coin to determine who goes first...");
     performCoinFlip();
   };
@@ -885,14 +854,18 @@ const Playground = () => {
                           onFileSelect={async (file) => {
                             try {
                               const loadedModel = await loadModelFromFile(file);
-                              setModels({
-                                model2: loadedModel
-                              });
-                              setModel2Input('');
-                              toast({
-                                title: "Model loaded successfully",
-                                description: "The model file has been loaded and is ready to use.",
-                              });
+                              if (isBoardModel(loadedModel)) {
+                                setModels({
+                                  model2: loadedModel
+                                });
+                                setModel2Input('');
+                                toast({
+                                  title: "Model loaded successfully",
+                                  description: "The model file has been loaded and is ready to use.",
+                                });
+                              } else {
+                                setModel2ValidationError('Loaded model is not a valid TicTacToe model');
+                              }
                             } catch (error) {
                               console.error("Error loading model:", error);
                               setModel2ValidationError(`Failed to load model: ${error}`);
